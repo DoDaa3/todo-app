@@ -1,0 +1,86 @@
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+  useCallback,
+} from "react";
+import api from "../lib/api";
+import { User } from "../types";
+
+interface AuthContextType {
+  user: User | null;
+  token: string | null;
+  login: (email: string, password: string) => Promise<void>;
+  signup: (email: string, name: string, password: string) => Promise<void>;
+  logout: () => void;
+  loading: boolean;
+}
+
+const AuthContext = createContext<AuthContextType | null>(null);
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(
+    localStorage.getItem("token")
+  );
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (token) {
+      api
+        .get("/auth/me")
+        .then((res) => {
+          setUser(res.data.user);
+        })
+        .catch(() => {
+          setToken(null);
+          setUser(null);
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+        })
+        .finally(() => setLoading(false));
+    } else {
+      setLoading(false);
+    }
+  }, [token]);
+
+  const login = useCallback(async (email: string, password: string) => {
+    const res = await api.post("/auth/login", { email, password });
+    localStorage.setItem("token", res.data.token);
+    localStorage.setItem("user", JSON.stringify(res.data.user));
+    setToken(res.data.token);
+    setUser(res.data.user);
+  }, []);
+
+  const signup = useCallback(
+    async (email: string, name: string, password: string) => {
+      const res = await api.post("/auth/signup", { email, name, password });
+      localStorage.setItem("token", res.data.token);
+      localStorage.setItem("user", JSON.stringify(res.data.user));
+      setToken(res.data.token);
+      setUser(res.data.user);
+    },
+    []
+  );
+
+  const logout = useCallback(() => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    setToken(null);
+    setUser(null);
+  }, []);
+
+  return (
+    <AuthContext.Provider value={{ user, token, login, signup, logout, loading }}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+export function useAuth() {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
+  return ctx;
+}
