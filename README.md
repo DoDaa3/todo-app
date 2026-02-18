@@ -9,7 +9,7 @@ A full-stack collaborative Kanban board application with real-time updates, drag
 - **Database:** PostgreSQL with Prisma ORM
 - **Real-time:** Socket.io
 - **Auth:** JWT-based signup/login with email verification
-- **Email:** Nodemailer (configurable SMTP)
+- **Email:** Resend (transactional email API)
 
 ## Features
 
@@ -84,12 +84,8 @@ Edit `server/.env` with your values:
 | `JWT_SECRET`   | `your-super-secret-jwt-key-change-in-production`             | JWT signing secret                |
 | `PORT`         | `3001`                                                       | Server port                       |
 | `CLIENT_URL`   | `http://localhost:5173`                                      | CORS allowed origin               |
-| `SMTP_HOST`    | `smtp.gmail.com`                                             | SMTP server host                  |
-| `SMTP_PORT`    | `587`                                                        | SMTP server port                  |
-| `SMTP_SECURE`  | `false`                                                      | Use TLS (`true` for port 465)     |
-| `SMTP_USER`    | —                                                            | SMTP username / email             |
-| `SMTP_PASS`    | —                                                            | SMTP password / app password      |
-| `SMTP_FROM`    | —                                                            | "From" address for outgoing emails |
+| `RESEND_API_KEY` | —                                                          | Resend API key (from resend.com)  |
+| `EMAIL_FROM`   | `Kanban App <onboarding@resend.dev>`                         | "From" address for outgoing emails |
 
 ### 4. Run database migrations
 
