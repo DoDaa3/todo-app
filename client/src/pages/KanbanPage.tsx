@@ -2,12 +2,14 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { DragDropContext, DropResult } from "@hello-pangea/dnd";
 import api from "../lib/api";
-import { connectSocket, disconnectSocket, getSocket } from "../lib/socket";
+import { connectSocket, disconnectSocket } from "../lib/socket";
 import { Board, Task, Column, Priority } from "../types";
 import Navbar from "../components/Navbar";
 import BoardColumn from "../components/BoardColumn";
 import TaskModal from "../components/TaskModal";
 import FilterBar from "../components/FilterBar";
+import ConfirmModal from "../components/ConfirmModal";
+import { useToast } from "../components/Toast";
 
 type DueDateFilter = "ALL" | "OVERDUE" | "TODAY" | "THIS_WEEK" | "NO_DATE";
 
@@ -61,6 +63,7 @@ function filterTasks(
 export default function KanbanPage() {
   const { boardId } = useParams<{ boardId: string }>();
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const [board, setBoard] = useState<Board | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -68,6 +71,12 @@ export default function KanbanPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Partial<Task> | null>(null);
   const [activeColumnId, setActiveColumnId] = useState<string | null>(null);
+
+  // Delete confirmation modal
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    open: boolean;
+    taskId: string | null;
+  }>({ open: false, taskId: null });
 
   // Filters
   const [priorityFilter, setPriorityFilter] = useState<Priority | "ALL">(
@@ -224,7 +233,7 @@ export default function KanbanPage() {
         position: destination.index,
       });
     } catch {
-      // Revert on failure
+      showToast("Failed to move task", "error");
       fetchBoard();
     }
   }
@@ -241,23 +250,19 @@ export default function KanbanPage() {
     setModalOpen(true);
   }
 
-  async function handleDeleteTask(taskId: string) {
-    if (!window.confirm("Delete this task?")) return;
+  function handleDeleteTask(taskId: string) {
+    setDeleteConfirm({ open: true, taskId });
+  }
+
+  async function confirmDeleteTask() {
+    if (!deleteConfirm.taskId) return;
     try {
-      await api.delete(`/tasks/${taskId}`);
-      setBoard((prev) => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          columns: prev.columns.map((col) => ({
-            ...col,
-            tasks: col.tasks.filter((t) => t.id !== taskId),
-          })),
-        };
-      });
+      await api.delete(`/tasks/${deleteConfirm.taskId}`);
+      showToast("Task deleted", "success");
     } catch (err) {
-      console.error("Failed to delete task", err);
+      showToast("Failed to delete task", "error");
     }
+    setDeleteConfirm({ open: false, taskId: null });
   }
 
   async function handleSaveTask(data: {
@@ -268,41 +273,18 @@ export default function KanbanPage() {
   }) {
     try {
       if (editingTask?.id) {
-        // Update
-        const res = await api.patch(`/tasks/${editingTask.id}`, data);
-        setBoard((prev) => {
-          if (!prev) return prev;
-          return {
-            ...prev,
-            columns: prev.columns.map((col) => ({
-              ...col,
-              tasks: col.tasks.map((t) =>
-                t.id === editingTask.id ? res.data : t
-              ),
-            })),
-          };
-        });
+        await api.patch(`/tasks/${editingTask.id}`, data);
+        showToast("Task updated", "success");
       } else {
-        // Create
-        const res = await api.post("/tasks", {
+        await api.post("/tasks", {
           ...data,
           columnId: activeColumnId,
         });
-        setBoard((prev) => {
-          if (!prev) return prev;
-          return {
-            ...prev,
-            columns: prev.columns.map((col) =>
-              col.id === activeColumnId
-                ? { ...col, tasks: [...col.tasks, res.data] }
-                : col
-            ),
-          };
-        });
+        showToast("Task created", "success");
       }
       setModalOpen(false);
     } catch (err) {
-      console.error("Failed to save task", err);
+      showToast("Failed to save task", "error");
     }
   }
 
@@ -320,9 +302,9 @@ export default function KanbanPage() {
   if (!board) return null;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col">
       <Navbar />
-      <div className="px-4 sm:px-6 lg:px-8 py-4 border-b border-gray-200 bg-white">
+      <div className="px-4 sm:px-6 lg:px-8 py-4 border-b border-gray-200 bg-white/80 backdrop-blur-sm">
         <div className="max-w-full mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex items-center gap-3">
             <button
@@ -354,9 +336,9 @@ export default function KanbanPage() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-x-auto p-6">
+      <div className="flex-1 overflow-x-auto p-4 sm:p-6">
         <DragDropContext onDragEnd={handleDragEnd}>
-          <div className="flex gap-5 min-h-0">
+          <div className="flex flex-col sm:flex-row gap-4 sm:gap-5 min-h-0">
             {filteredColumns.map((column) => (
               <BoardColumn
                 key={column.id}
@@ -375,6 +357,16 @@ export default function KanbanPage() {
         task={editingTask}
         onClose={() => setModalOpen(false)}
         onSave={handleSaveTask}
+      />
+
+      <ConfirmModal
+        open={deleteConfirm.open}
+        title="Delete Task"
+        message="Are you sure you want to delete this task? This action cannot be undone."
+        confirmLabel="Delete"
+        confirmVariant="danger"
+        onConfirm={confirmDeleteTask}
+        onCancel={() => setDeleteConfirm({ open: false, taskId: null })}
       />
     </div>
   );

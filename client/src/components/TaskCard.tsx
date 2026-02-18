@@ -10,12 +10,12 @@ interface TaskCardProps {
 
 const priorityConfig: Record<
   Priority,
-  { label: string; bg: string; text: string }
+  { label: string; bg: string; text: string; dot: string }
 > = {
-  LOW: { label: "Low", bg: "bg-gray-100", text: "text-gray-600" },
-  MEDIUM: { label: "Medium", bg: "bg-blue-100", text: "text-blue-700" },
-  HIGH: { label: "High", bg: "bg-orange-100", text: "text-orange-700" },
-  URGENT: { label: "Urgent", bg: "bg-red-100", text: "text-red-700" },
+  LOW: { label: "Low", bg: "bg-gray-100", text: "text-gray-600", dot: "bg-gray-400" },
+  MEDIUM: { label: "Medium", bg: "bg-blue-50", text: "text-blue-700", dot: "bg-blue-500" },
+  HIGH: { label: "High", bg: "bg-orange-50", text: "text-orange-700", dot: "bg-orange-500" },
+  URGENT: { label: "Urgent", bg: "bg-red-50", text: "text-red-700", dot: "bg-red-500" },
 };
 
 function formatDate(dateStr: string | null) {
@@ -45,25 +45,26 @@ export default function TaskCard({
           ref={provided.innerRef}
           {...provided.draggableProps}
           {...provided.dragHandleProps}
-          className={`bg-white rounded-lg border p-3 mb-2 cursor-grab active:cursor-grabbing
-            transition-shadow duration-200
+          className={`bg-white rounded-xl border p-3.5 mb-2.5 cursor-grab active:cursor-grabbing
+            transition-all duration-200 group
             ${
               snapshot.isDragging
-                ? "shadow-lg border-brand-300 ring-2 ring-brand-100"
-                : "border-gray-200 hover:border-gray-300 shadow-sm hover:shadow"
+                ? "shadow-xl border-brand-300 ring-2 ring-brand-100 scale-[1.02] rotate-[1deg]"
+                : "border-gray-200 hover:border-gray-300 shadow-sm hover:shadow-md"
             }`}
         >
+          {/* Title + Actions */}
           <div className="flex items-start justify-between gap-2">
-            <h4 className="text-sm font-medium text-gray-900 flex-1 leading-snug">
+            <h4 className="text-sm font-semibold text-gray-900 flex-1 leading-snug">
               {task.title}
             </h4>
-            <div className="flex items-center gap-1 shrink-0">
+            <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   onEdit(task);
                 }}
-                className="p-1 text-gray-400 hover:text-brand-600 rounded transition-colors"
+                className="p-1.5 text-gray-400 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors"
                 title="Edit task"
               >
                 <svg
@@ -85,7 +86,7 @@ export default function TaskCard({
                   e.stopPropagation();
                   onDelete(task.id);
                 }}
-                className="p-1 text-gray-400 hover:text-red-500 rounded transition-colors"
+                className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                 title="Delete task"
               >
                 <svg
@@ -104,23 +105,29 @@ export default function TaskCard({
               </button>
             </div>
           </div>
+
+          {/* Description */}
           {task.description && (
-            <p className="text-xs text-gray-500 mt-1.5 line-clamp-2 leading-relaxed">
+            <p className="text-xs text-gray-500 mt-2 line-clamp-2 leading-relaxed">
               {task.description}
             </p>
           )}
-          <div className="flex items-center gap-2 mt-2.5 flex-wrap">
+
+          {/* Priority Badge + Due Date */}
+          <div className="flex items-center gap-2 mt-3 flex-wrap">
             <span
-              className={`text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded ${p.bg} ${p.text}`}
+              className={`inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide
+                px-2 py-1 rounded-md ${p.bg} ${p.text}`}
             >
+              <span className={`w-1.5 h-1.5 rounded-full ${p.dot}`} />
               {p.label}
             </span>
             {task.dueDate && (
               <span
-                className={`text-[10px] font-medium px-1.5 py-0.5 rounded flex items-center gap-1 ${
+                className={`inline-flex items-center gap-1 text-[10px] font-medium px-2 py-1 rounded-md ${
                   overdue
-                    ? "bg-red-50 text-red-600"
-                    : "bg-gray-100 text-gray-500"
+                    ? "bg-red-50 text-red-600 font-semibold"
+                    : "bg-gray-50 text-gray-500"
                 }`}
               >
                 <svg

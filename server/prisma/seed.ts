@@ -13,6 +13,7 @@ async function main() {
       email: "demo@kanban.app",
       name: "Demo User",
       password: hashedPassword,
+      emailVerified: true,
     },
   });
 

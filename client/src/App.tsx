@@ -1,7 +1,9 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./hooks/useAuth";
+import { ToastProvider } from "./components/Toast";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
+import VerifyEmailPage from "./pages/VerifyEmailPage";
 import BoardsPage from "./pages/BoardsPage";
 import KanbanPage from "./pages/KanbanPage";
 
@@ -55,6 +57,14 @@ function AppRoutes() {
         }
       />
       <Route
+        path="/verify-email"
+        element={
+          <PublicRoute>
+            <VerifyEmailPage />
+          </PublicRoute>
+        }
+      />
+      <Route
         path="/"
         element={
           <PrivateRoute>
@@ -78,7 +88,9 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <AppRoutes />
+        <ToastProvider>
+          <AppRoutes />
+        </ToastProvider>
       </AuthProvider>
     </BrowserRouter>
   );

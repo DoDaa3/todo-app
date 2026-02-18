@@ -3,20 +3,27 @@ import { useNavigate } from "react-router-dom";
 import api from "../lib/api";
 import { BoardSummary } from "../types";
 import Navbar from "../components/Navbar";
+import ConfirmModal from "../components/ConfirmModal";
+import { useToast } from "../components/Toast";
 
 export default function BoardsPage() {
   const [boards, setBoards] = useState<BoardSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [newTitle, setNewTitle] = useState("");
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    open: boolean;
+    boardId: string | null;
+  }>({ open: false, boardId: null });
   const navigate = useNavigate();
+  const { showToast } = useToast();
 
   const fetchBoards = useCallback(async () => {
     try {
       const res = await api.get("/boards");
       setBoards(res.data);
     } catch (err) {
-      console.error("Failed to fetch boards", err);
+      showToast("Failed to fetch boards", "error");
     } finally {
       setLoading(false);
     }
@@ -31,20 +38,23 @@ export default function BoardsPage() {
     if (!newTitle.trim()) return;
     try {
       const res = await api.post("/boards", { title: newTitle.trim() });
+      showToast("Board created", "success");
       navigate(`/board/${res.data.id}`);
     } catch (err) {
-      console.error("Failed to create board", err);
+      showToast("Failed to create board", "error");
     }
   }
 
-  async function handleDelete(boardId: string) {
-    if (!window.confirm("Are you sure you want to delete this board?")) return;
+  async function confirmDeleteBoard() {
+    if (!deleteConfirm.boardId) return;
     try {
-      await api.delete(`/boards/${boardId}`);
-      setBoards((prev) => prev.filter((b) => b.id !== boardId));
+      await api.delete(`/boards/${deleteConfirm.boardId}`);
+      setBoards((prev) => prev.filter((b) => b.id !== deleteConfirm.boardId));
+      showToast("Board deleted", "success");
     } catch (err) {
-      console.error("Failed to delete board", err);
+      showToast("Failed to delete board", "error");
     }
+    setDeleteConfirm({ open: false, boardId: null });
   }
 
   return (
@@ -156,7 +166,7 @@ export default function BoardsPage() {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleDelete(board.id);
+                      setDeleteConfirm({ open: true, boardId: board.id });
                     }}
                     className="p-1.5 text-gray-300 hover:text-red-500 rounded-lg transition-colors
                       opacity-0 group-hover:opacity-100"
@@ -198,6 +208,16 @@ export default function BoardsPage() {
           </div>
         )}
       </div>
+
+      <ConfirmModal
+        open={deleteConfirm.open}
+        title="Delete Board"
+        message="Are you sure you want to delete this board? All columns and tasks will be permanently removed."
+        confirmLabel="Delete"
+        confirmVariant="danger"
+        onConfirm={confirmDeleteBoard}
+        onCancel={() => setDeleteConfirm({ open: false, boardId: null })}
+      />
     </div>
   );
 }

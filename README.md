@@ -8,7 +8,8 @@ A full-stack collaborative Kanban board application with real-time updates, drag
 - **Backend:** Node.js, Express, TypeScript
 - **Database:** PostgreSQL with Prisma ORM
 - **Real-time:** Socket.io
-- **Auth:** JWT-based signup/login
+- **Auth:** JWT-based signup/login with email verification
+- **Email:** Nodemailer (configurable SMTP)
 
 ## Features
 
@@ -17,8 +18,10 @@ A full-stack collaborative Kanban board application with real-time updates, drag
 - Create, edit, and delete tasks (title, description, priority, due date)
 - Real-time updates via Socket.io — all connected clients see changes instantly
 - JWT-based user authentication (signup / login)
+- Email verification on signup — users must verify email before signing in
 - Multiple boards — create and manage separate project boards
 - Task filtering by priority level and due date
+- Custom confirmation modals and toast notifications (no native browser dialogs)
 - Responsive design for mobile and desktop
 
 ## Project Structure
@@ -35,7 +38,7 @@ A full-stack collaborative Kanban board application with real-time updates, drag
 ├── server/                 # Express backend
 │   ├── prisma/             # Prisma schema & migrations
 │   ├── src/
-│   │   ├── lib/            # Prisma client, socket setup
+│   │   ├── lib/            # Prisma client, socket setup, email
 │   │   ├── middleware/     # Auth middleware
 │   │   └── routes/         # API route handlers
 │   └── ...
@@ -73,14 +76,20 @@ docker compose up -d
 cp server/.env.example server/.env
 ```
 
-Edit `server/.env` if needed. Defaults work with the Docker Compose setup:
+Edit `server/.env` with your values:
 
-| Variable       | Default                                                      | Description             |
-| -------------- | ------------------------------------------------------------ | ----------------------- |
-| `DATABASE_URL` | `postgresql://kanban_user:kanban_pass@localhost:5432/kanban_db` | PostgreSQL connection   |
-| `JWT_SECRET`   | `your-super-secret-jwt-key-change-in-production`             | JWT signing secret      |
-| `PORT`         | `3001`                                                       | Server port             |
-| `CLIENT_URL`   | `http://localhost:5173`                                      | CORS allowed origin     |
+| Variable       | Default                                                      | Description                       |
+| -------------- | ------------------------------------------------------------ | --------------------------------- |
+| `DATABASE_URL` | `postgresql://kanban_user:kanban_pass@localhost:5432/kanban_db` | PostgreSQL connection             |
+| `JWT_SECRET`   | `your-super-secret-jwt-key-change-in-production`             | JWT signing secret                |
+| `PORT`         | `3001`                                                       | Server port                       |
+| `CLIENT_URL`   | `http://localhost:5173`                                      | CORS allowed origin               |
+| `SMTP_HOST`    | `smtp.gmail.com`                                             | SMTP server host                  |
+| `SMTP_PORT`    | `587`                                                        | SMTP server port                  |
+| `SMTP_SECURE`  | `false`                                                      | Use TLS (`true` for port 465)     |
+| `SMTP_USER`    | —                                                            | SMTP username / email             |
+| `SMTP_PASS`    | —                                                            | SMTP password / app password      |
+| `SMTP_FROM`    | —                                                            | "From" address for outgoing emails |
 
 ### 4. Run database migrations
 
@@ -123,8 +132,9 @@ Visit [http://localhost:5173](http://localhost:5173) in your browser.
 ## API Endpoints
 
 ### Auth
-- `POST /api/auth/signup` — Create account
-- `POST /api/auth/login` — Sign in
+- `POST /api/auth/signup` — Create account (sends verification email)
+- `GET /api/auth/verify/:token` — Verify email address
+- `POST /api/auth/login` — Sign in (requires verified email)
 - `GET /api/auth/me` — Get current user
 
 ### Boards
