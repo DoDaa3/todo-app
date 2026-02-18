@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import api from "../lib/api";
 
@@ -9,6 +9,7 @@ export default function VerifyEmailPage() {
     "loading"
   );
   const [message, setMessage] = useState("");
+  const calledRef = useRef(false);
 
   useEffect(() => {
     if (!token) {
@@ -16,6 +17,9 @@ export default function VerifyEmailPage() {
       setMessage("Invalid verification link — no token provided.");
       return;
     }
+
+    if (calledRef.current) return;
+    calledRef.current = true;
 
     api
       .get(`/auth/verify/${token}`)
