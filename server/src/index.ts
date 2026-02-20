@@ -16,7 +16,17 @@ const httpServer = createServer(app);
 const PORT = process.env.PORT || 3001;
 const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173";
 
-app.use(cors({ origin: CLIENT_URL }));
+app.use(
+  cors({
+    origin: CLIENT_URL.split(",").map((u) => u.trim()),
+    credentials: true,
+  })
+);
+
+// Root route
+app.get("/", (_req, res) => {
+  res.json({ message: "Kanban API is running" });
+});
 app.use(express.json());
 
 // Health check
