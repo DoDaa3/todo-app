@@ -30,9 +30,16 @@ app.use("/api/boards", boardRoutes);
 app.use("/api/columns", columnRoutes);
 app.use("/api/tasks", taskRoutes);
 
-// Initialize Socket.io
-initSocket(httpServer, CLIENT_URL);
+// Initialize Socket.io (only works in non-serverless environments)
+if (!process.env.VERCEL) {
+  initSocket(httpServer, CLIENT_URL);
+}
 
-httpServer.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-});
+// Start server (local dev only — Vercel uses the exported app)
+if (!process.env.VERCEL) {
+  httpServer.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+  });
+}
+
+export default app;
