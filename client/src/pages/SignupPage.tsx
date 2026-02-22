@@ -20,7 +20,7 @@ export default function SignupPage() {
       const result = await signup(email, name, password);
       setSuccessMessage(result.message);
     } catch (err: any) {
-      setError(err.response?.data?.error || "Signup failed");
+      setError(err.response?.data?.error || err.message || "Signup failed. Please try again.");
     } finally {
       setSubmitting(false);
     }
