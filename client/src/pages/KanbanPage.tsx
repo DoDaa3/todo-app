@@ -256,8 +256,19 @@ export default function KanbanPage() {
 
   async function confirmDeleteTask() {
     if (!deleteConfirm.taskId) return;
+    const taskId = deleteConfirm.taskId;
     try {
-      await api.delete(`/tasks/${deleteConfirm.taskId}`);
+      await api.delete(`/tasks/${taskId}`);
+      setBoard((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          columns: prev.columns.map((col) => ({
+            ...col,
+            tasks: col.tasks.filter((t) => t.id !== taskId),
+          })),
+        };
+      });
       showToast("Task deleted", "success");
     } catch (err) {
       showToast("Failed to delete task", "error");
@@ -273,12 +284,35 @@ export default function KanbanPage() {
   }) {
     try {
       if (editingTask?.id) {
-        await api.patch(`/tasks/${editingTask.id}`, data);
+        const res = await api.patch(`/tasks/${editingTask.id}`, data);
+        const updated: Task = res.data;
+        setBoard((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            columns: prev.columns.map((col) => ({
+              ...col,
+              tasks: col.tasks.map((t) => (t.id === updated.id ? updated : t)),
+            })),
+          };
+        });
         showToast("Task updated", "success");
       } else {
-        await api.post("/tasks", {
+        const res = await api.post("/tasks", {
           ...data,
           columnId: activeColumnId,
+        });
+        const newTask: Task = res.data;
+        setBoard((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            columns: prev.columns.map((col) =>
+              col.id === newTask.columnId
+                ? { ...col, tasks: [...col.tasks, newTask] }
+                : col
+            ),
+          };
         });
         showToast("Task created", "success");
       }
