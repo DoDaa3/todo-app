@@ -92,12 +92,12 @@ function ToastNotification({
 
   return (
     <div
-      className={`pointer-events-auto flex items-center gap-3 bg-white rounded-xl shadow-lg border border-gray-100
+      className={`pointer-events-auto flex items-center gap-3 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700
         px-4 py-3 min-w-[300px] max-w-[420px] transition-all duration-300
         ${isExiting ? "opacity-0 translate-x-4" : "opacity-100 translate-x-0 animate-slide-in"}`}
     >
       <div className={`shrink-0 p-1 rounded-lg ${colors}`}>{icon}</div>
-      <p className="text-sm text-gray-700 flex-1">{toast.message}</p>
+      <p className="text-sm text-gray-700 dark:text-gray-300 flex-1">{toast.message}</p>
       <button
         onClick={() => {
           setIsExiting(true);

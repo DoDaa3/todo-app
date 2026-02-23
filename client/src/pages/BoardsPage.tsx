@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../lib/api";
 import { BoardSummary } from "../types";
 import Navbar from "../components/Navbar";
+import SearchModal from "../components/SearchModal";
 import ConfirmModal from "../components/ConfirmModal";
 import { useToast } from "../components/Toast";
 
@@ -15,14 +16,27 @@ export default function BoardsPage() {
     open: boolean;
     boardId: string | null;
   }>({ open: false, boardId: null });
+  const [searchOpen, setSearchOpen] = useState(false);
   const navigate = useNavigate();
   const { showToast } = useToast();
+
+  // Global Cmd+K handler
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+    }
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   const fetchBoards = useCallback(async () => {
     try {
       const res = await api.get("/boards");
       setBoards(res.data);
-    } catch (err) {
+    } catch {
       showToast("Failed to fetch boards", "error");
     } finally {
       setLoading(false);
@@ -40,7 +54,7 @@ export default function BoardsPage() {
       const res = await api.post("/boards", { title: newTitle.trim() });
       showToast("Board created", "success");
       navigate(`/board/${res.data.id}`);
-    } catch (err) {
+    } catch {
       showToast("Failed to create board", "error");
     }
   }
@@ -51,18 +65,18 @@ export default function BoardsPage() {
       await api.delete(`/boards/${deleteConfirm.boardId}`);
       setBoards((prev) => prev.filter((b) => b.id !== deleteConfirm.boardId));
       showToast("Board deleted", "success");
-    } catch (err) {
+    } catch {
       showToast("Failed to delete board", "error");
     }
     setDeleteConfirm({ open: false, boardId: null });
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <Navbar onSearchOpen={() => setSearchOpen(true)} />
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">My Boards</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">My Boards</h1>
           <button
             onClick={() => setCreating(true)}
             className="flex items-center gap-2 px-4 py-2 bg-brand-600 text-white text-sm font-medium
@@ -88,15 +102,17 @@ export default function BoardsPage() {
         {creating && (
           <form
             onSubmit={handleCreate}
-            className="bg-white rounded-xl border border-gray-200 p-4 mb-6 flex gap-3"
+            className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 mb-6 flex gap-3"
           >
             <input
               type="text"
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
               placeholder="Board name..."
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm
-                focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+              className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm
+                bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
+                focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent
+                placeholder:text-gray-400"
               autoFocus
             />
             <button
@@ -112,8 +128,8 @@ export default function BoardsPage() {
                 setCreating(false);
                 setNewTitle("");
               }}
-              className="px-4 py-2 text-gray-700 bg-gray-100 text-sm font-medium rounded-lg
-                hover:bg-gray-200 transition-colors"
+              className="px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 text-sm font-medium rounded-lg
+                hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
             >
               Cancel
             </button>
@@ -126,9 +142,9 @@ export default function BoardsPage() {
           </div>
         ) : boards.length === 0 ? (
           <div className="text-center py-20">
-            <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <svg
-                className="w-8 h-8 text-gray-400"
+                className="w-8 h-8 text-gray-400 dark:text-gray-500"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -141,7 +157,7 @@ export default function BoardsPage() {
                 />
               </svg>
             </div>
-            <p className="text-gray-500 text-sm">
+            <p className="text-gray-500 dark:text-gray-400 text-sm">
               No boards yet. Create your first board to get started.
             </p>
           </div>
@@ -150,16 +166,16 @@ export default function BoardsPage() {
             {boards.map((board) => (
               <div
                 key={board.id}
-                className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md
+                className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 hover:shadow-md
                   transition-shadow cursor-pointer group"
                 onClick={() => navigate(`/board/${board.id}`)}
               >
                 <div className="flex items-start justify-between">
                   <div>
-                    <h3 className="font-semibold text-gray-900 group-hover:text-brand-600 transition-colors">
+                    <h3 className="font-semibold text-gray-900 dark:text-gray-100 group-hover:text-brand-600 transition-colors">
                       {board.title}
                     </h3>
-                    <p className="text-xs text-gray-400 mt-1">
+                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
                       {board._count.columns} columns
                     </p>
                   </div>
@@ -168,7 +184,7 @@ export default function BoardsPage() {
                       e.stopPropagation();
                       setDeleteConfirm({ open: true, boardId: board.id });
                     }}
-                    className="p-1.5 text-gray-300 hover:text-red-500 rounded-lg transition-colors
+                    className="p-1.5 text-gray-300 dark:text-gray-600 hover:text-red-500 rounded-lg transition-colors
                       opacity-0 group-hover:opacity-100"
                     title="Delete board"
                   >
@@ -187,7 +203,7 @@ export default function BoardsPage() {
                     </svg>
                   </button>
                 </div>
-                <div className="mt-4 flex items-center text-xs text-gray-400">
+                <div className="mt-4 flex items-center text-xs text-gray-400 dark:text-gray-500">
                   <svg
                     className="w-3.5 h-3.5 mr-1"
                     fill="none"
@@ -218,6 +234,8 @@ export default function BoardsPage() {
         onConfirm={confirmDeleteBoard}
         onCancel={() => setDeleteConfirm({ open: false, boardId: null })}
       />
+
+      <SearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />
     </div>
   );
 }

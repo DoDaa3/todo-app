@@ -45,17 +45,17 @@ export default function TaskCard({
           ref={provided.innerRef}
           {...provided.draggableProps}
           {...provided.dragHandleProps}
-          className={`bg-white rounded-xl border p-3.5 mb-2.5 cursor-grab active:cursor-grabbing
+          className={`bg-white dark:bg-gray-800 rounded-xl border p-3.5 mb-2.5 cursor-grab active:cursor-grabbing
             transition-all duration-200 group
             ${
               snapshot.isDragging
                 ? "shadow-xl border-brand-300 ring-2 ring-brand-100 scale-[1.02] rotate-[1deg]"
-                : "border-gray-200 hover:border-gray-300 shadow-sm hover:shadow-md"
+                : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 shadow-sm hover:shadow-md"
             }`}
         >
           {/* Title + Actions */}
           <div className="flex items-start justify-between gap-2">
-            <h4 className="text-sm font-semibold text-gray-900 flex-1 leading-snug">
+            <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex-1 leading-snug">
               {task.title}
             </h4>
             <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -108,7 +108,7 @@ export default function TaskCard({
 
           {/* Description */}
           {task.description && (
-            <p className="text-xs text-gray-500 mt-2 line-clamp-2 leading-relaxed">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 line-clamp-2 leading-relaxed">
               {task.description}
             </p>
           )}

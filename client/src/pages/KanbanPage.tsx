@@ -7,8 +7,14 @@ import { Board, Task, Column, Priority } from "../types";
 import Navbar from "../components/Navbar";
 import BoardColumn from "../components/BoardColumn";
 import TaskModal from "../components/TaskModal";
+import TaskDetailModal from "../components/TaskDetailModal";
 import FilterBar from "../components/FilterBar";
 import ConfirmModal from "../components/ConfirmModal";
+import SearchModal from "../components/SearchModal";
+import ViewSwitcher, { ViewMode } from "../components/ViewSwitcher";
+import ListView from "../components/ListView";
+import CalendarView from "../components/CalendarView";
+import TimelineView from "../components/TimelineView";
 import { useToast } from "../components/Toast";
 
 type DueDateFilter = "ALL" | "OVERDUE" | "TODAY" | "THIS_WEEK" | "NO_DATE";
@@ -67,10 +73,17 @@ export default function KanbanPage() {
   const [board, setBoard] = useState<Board | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // View mode
+  const [viewMode, setViewMode] = useState<ViewMode>("kanban");
+
   // Modal state
   const [modalOpen, setModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Partial<Task> | null>(null);
   const [activeColumnId, setActiveColumnId] = useState<string | null>(null);
+
+  // Task detail modal
+  const [detailTask, setDetailTask] = useState<Task | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
 
   // Delete confirmation modal
   const [deleteConfirm, setDeleteConfirm] = useState<{
@@ -83,6 +96,21 @@ export default function KanbanPage() {
     "ALL"
   );
   const [dueDateFilter, setDueDateFilter] = useState<DueDateFilter>("ALL");
+
+  // Search
+  const [searchOpen, setSearchOpen] = useState(false);
+
+  // Global Cmd+K handler
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+    }
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   const fetchBoard = useCallback(async () => {
     try {
@@ -245,6 +273,11 @@ export default function KanbanPage() {
   }
 
   function handleEditTask(task: Task) {
+    setDetailTask(task);
+    setDetailOpen(true);
+  }
+
+  function handleQuickEditTask(task: Task) {
     setActiveColumnId(task.columnId);
     setEditingTask(task);
     setModalOpen(true);
@@ -270,7 +303,7 @@ export default function KanbanPage() {
         };
       });
       showToast("Task deleted", "success");
-    } catch (err) {
+    } catch {
       showToast("Failed to delete task", "error");
     }
     setDeleteConfirm({ open: false, taskId: null });
@@ -317,15 +350,28 @@ export default function KanbanPage() {
         showToast("Task created", "success");
       }
       setModalOpen(false);
-    } catch (err) {
+    } catch {
       showToast("Failed to save task", "error");
     }
   }
 
+  function handleTaskUpdated(updatedTask: Task) {
+    setBoard((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        columns: prev.columns.map((col) => ({
+          ...col,
+          tasks: col.tasks.map((t) => (t.id === updatedTask.id ? updatedTask : t)),
+        })),
+      };
+    });
+  }
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <Navbar />
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <Navbar onSearchOpen={() => setSearchOpen(true)} />
         <div className="flex items-center justify-center py-20">
           <div className="w-8 h-8 border-4 border-brand-200 border-t-brand-600 rounded-full animate-spin" />
         </div>
@@ -336,14 +382,14 @@ export default function KanbanPage() {
   if (!board) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col">
-      <Navbar />
-      <div className="px-4 sm:px-6 lg:px-8 py-4 border-b border-gray-200 bg-white/80 backdrop-blur-sm">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-950 flex flex-col">
+      <Navbar onSearchOpen={() => setSearchOpen(true)} />
+      <div className="px-4 sm:px-6 lg:px-8 py-4 border-b border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm">
         <div className="max-w-full mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex items-center gap-3">
             <button
               onClick={() => navigate("/")}
-              className="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
+              className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
             >
               <svg
                 className="w-5 h-5"
@@ -359,7 +405,8 @@ export default function KanbanPage() {
                 />
               </svg>
             </button>
-            <h1 className="text-xl font-bold text-gray-900">{board.title}</h1>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-white">{board.title}</h1>
+            <ViewSwitcher active={viewMode} onChange={setViewMode} />
           </div>
           <FilterBar
             priorityFilter={priorityFilter}
@@ -371,19 +418,44 @@ export default function KanbanPage() {
       </div>
 
       <div className="flex-1 overflow-x-auto p-4 sm:p-6">
-        <DragDropContext onDragEnd={handleDragEnd}>
-          <div className="flex flex-col sm:flex-row gap-4 sm:gap-5 min-h-0">
-            {filteredColumns.map((column) => (
-              <BoardColumn
-                key={column.id}
-                column={column}
-                onAddTask={handleAddTask}
-                onEditTask={handleEditTask}
-                onDeleteTask={handleDeleteTask}
-              />
-            ))}
-          </div>
-        </DragDropContext>
+        {viewMode === "kanban" && (
+          <DragDropContext onDragEnd={handleDragEnd}>
+            <div className="flex flex-col sm:flex-row gap-4 sm:gap-5 min-h-0">
+              {filteredColumns.map((column) => (
+                <BoardColumn
+                  key={column.id}
+                  column={column}
+                  onAddTask={handleAddTask}
+                  onEditTask={handleEditTask}
+                  onDeleteTask={handleDeleteTask}
+                />
+              ))}
+            </div>
+          </DragDropContext>
+        )}
+
+        {viewMode === "list" && (
+          <ListView
+            columns={filteredColumns}
+            onEditTask={handleEditTask}
+            onDeleteTask={handleDeleteTask}
+            onAddTask={handleAddTask}
+          />
+        )}
+
+        {viewMode === "calendar" && (
+          <CalendarView
+            columns={filteredColumns}
+            onEditTask={handleEditTask}
+          />
+        )}
+
+        {viewMode === "timeline" && (
+          <TimelineView
+            columns={filteredColumns}
+            onEditTask={handleEditTask}
+          />
+        )}
       </div>
 
       <TaskModal
@@ -391,6 +463,13 @@ export default function KanbanPage() {
         task={editingTask}
         onClose={() => setModalOpen(false)}
         onSave={handleSaveTask}
+      />
+
+      <TaskDetailModal
+        open={detailOpen}
+        task={detailTask}
+        onClose={() => setDetailOpen(false)}
+        onTaskUpdated={handleTaskUpdated}
       />
 
       <ConfirmModal
@@ -402,6 +481,8 @@ export default function KanbanPage() {
         onConfirm={confirmDeleteTask}
         onCancel={() => setDeleteConfirm({ open: false, taskId: null })}
       />
+
+      <SearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />
     </div>
   );
 }

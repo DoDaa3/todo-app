@@ -47,7 +47,7 @@ export default function BoardColumn({
 
   return (
     <div
-      className={`flex flex-col bg-white rounded-2xl border border-gray-200 border-t-4 ${accent.border}
+      className={`flex flex-col bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 border-t-4 ${accent.border}
         w-full sm:w-80 shrink-0 max-h-[calc(100vh-10rem)] shadow-sm`}
     >
       <div className={`flex items-center justify-between px-4 py-3.5 ${accent.bg} rounded-t-xl`}>
