@@ -62,7 +62,7 @@ router.post("/", async (req: AuthRequest, res: Response) => {
       },
     });
 
-    getIO().to(`board:${column.boardId}`).emit("task:created", task);
+    getIO()?.to(`board:${column.boardId}`).emit("task:created", task);
     res.status(201).json(task);
   } catch (err) {
     if (err instanceof z.ZodError) {
@@ -100,7 +100,7 @@ router.patch("/:id", async (req: AuthRequest, res: Response) => {
     });
 
     getIO()
-      .to(`board:${task.column.boardId}`)
+      ?.to(`board:${task.column.boardId}`)
       .emit("task:updated", updated);
     res.json(updated);
   } catch (err) {
@@ -196,7 +196,7 @@ router.patch("/:id/move", async (req: AuthRequest, res: Response) => {
       },
     });
 
-    getIO().to(`board:${boardId}`).emit("board:updated", updatedBoard);
+    getIO()?.to(`board:${boardId}`).emit("board:updated", updatedBoard);
     res.json(updatedBoard);
   } catch (err) {
     if (err instanceof z.ZodError) {
@@ -230,7 +230,7 @@ router.delete("/:id", async (req: AuthRequest, res: Response) => {
     });
 
     getIO()
-      .to(`board:${task.column.boardId}`)
+      ?.to(`board:${task.column.boardId}`)
       .emit("task:deleted", {
         id: req.params.id,
         columnId: task.columnId,

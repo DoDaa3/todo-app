@@ -35,7 +35,7 @@ router.post("/", async (req: AuthRequest, res: Response) => {
       include: { tasks: true },
     });
 
-    getIO().to(`board:${boardId}`).emit("column:created", column);
+    getIO()?.to(`board:${boardId}`).emit("column:created", column);
     res.status(201).json(column);
   } catch (err) {
     console.error(err);
@@ -61,7 +61,7 @@ router.patch("/:id", async (req: AuthRequest, res: Response) => {
       include: { tasks: { orderBy: { position: "asc" } } },
     });
 
-    getIO().to(`board:${column.boardId}`).emit("column:updated", updated);
+    getIO()?.to(`board:${column.boardId}`).emit("column:updated", updated);
     res.json(updated);
   } catch (err) {
     console.error(err);
@@ -82,7 +82,7 @@ router.delete("/:id", async (req: AuthRequest, res: Response) => {
 
     await prisma.column.delete({ where: { id: req.params.id } });
     getIO()
-      .to(`board:${column.boardId}`)
+      ?.to(`board:${column.boardId}`)
       .emit("column:deleted", { id: req.params.id, boardId: column.boardId });
     res.json({ success: true });
   } catch (err) {

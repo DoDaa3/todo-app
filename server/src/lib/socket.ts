@@ -30,9 +30,6 @@ export function initSocket(httpServer: HttpServer, clientUrl: string) {
   return io;
 }
 
-export function getIO(): Server {
-  if (!io) {
-    throw new Error("Socket.io not initialized");
-  }
-  return io;
+export function getIO(): Server | null {
+  return io || null;
 }
