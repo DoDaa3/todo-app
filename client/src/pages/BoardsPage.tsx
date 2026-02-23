@@ -71,16 +71,28 @@ export default function BoardsPage() {
     setDeleteConfirm({ open: false, boardId: null });
   }
 
+  const boardColors = [
+    "from-brand-500 to-brand-700",
+    "from-amber-500 to-orange-600",
+    "from-emerald-500 to-teal-600",
+    "from-rose-500 to-pink-600",
+    "from-cyan-500 to-sky-600",
+    "from-violet-500 to-purple-600",
+  ];
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-stone-50 dark:bg-stone-950">
       <Navbar onSearchOpen={() => setSearchOpen(true)} />
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">My Boards</h1>
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-2xl font-bold text-stone-900 dark:text-white">My Boards</h1>
+            <p className="text-sm text-stone-500 dark:text-stone-400 mt-1">Manage and organize your projects</p>
+          </div>
           <button
             onClick={() => setCreating(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-brand-600 text-white text-sm font-medium
-              rounded-lg hover:bg-brand-700 transition-colors"
+            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-brand-600 to-brand-700 text-white text-sm font-semibold
+              rounded-lg hover:from-brand-700 hover:to-brand-800 transition-all shadow-md shadow-brand-600/25 hover:shadow-lg hover:shadow-brand-600/30"
           >
             <svg
               className="w-4 h-4"
@@ -102,23 +114,23 @@ export default function BoardsPage() {
         {creating && (
           <form
             onSubmit={handleCreate}
-            className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 mb-6 flex gap-3"
+            className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200/80 dark:border-stone-800 p-4 mb-6 flex gap-3 shadow-sm"
           >
             <input
               type="text"
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
               placeholder="Board name..."
-              className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm
-                bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
-                focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent
-                placeholder:text-gray-400"
+              className="flex-1 px-3.5 py-2 border border-stone-300 dark:border-stone-700 rounded-lg text-sm
+                bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100
+                focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500 dark:focus:border-brand-400
+                placeholder:text-stone-400 dark:placeholder:text-stone-500 transition-colors"
               autoFocus
             />
             <button
               type="submit"
-              className="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg
-                hover:bg-brand-700 transition-colors"
+              className="px-4 py-2 bg-gradient-to-r from-brand-600 to-brand-700 text-white text-sm font-semibold rounded-lg
+                hover:from-brand-700 hover:to-brand-800 transition-all shadow-sm"
             >
               Create
             </button>
@@ -128,8 +140,8 @@ export default function BoardsPage() {
                 setCreating(false);
                 setNewTitle("");
               }}
-              className="px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 text-sm font-medium rounded-lg
-                hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+              className="px-4 py-2 text-stone-700 dark:text-stone-300 bg-stone-100 dark:bg-stone-800 text-sm font-medium rounded-lg
+                hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors"
             >
               Cancel
             </button>
@@ -138,13 +150,13 @@ export default function BoardsPage() {
 
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <div className="w-8 h-8 border-4 border-brand-200 border-t-brand-600 rounded-full animate-spin" />
+            <div className="w-8 h-8 border-4 border-brand-200 dark:border-brand-800 border-t-brand-600 dark:border-t-brand-400 rounded-full animate-spin" />
           </div>
         ) : boards.length === 0 ? (
           <div className="text-center py-20">
-            <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 bg-stone-100 dark:bg-stone-800 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <svg
-                className="w-8 h-8 text-gray-400 dark:text-gray-500"
+                className="w-8 h-8 text-stone-400 dark:text-stone-500"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -157,39 +169,57 @@ export default function BoardsPage() {
                 />
               </svg>
             </div>
-            <p className="text-gray-500 dark:text-gray-400 text-sm">
+            <p className="text-stone-500 dark:text-stone-400 text-sm">
               No boards yet. Create your first board to get started.
             </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {boards.map((board) => (
+            {boards.map((board, i) => (
               <div
                 key={board.id}
-                className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 hover:shadow-md
-                  transition-shadow cursor-pointer group"
+                className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200/80 dark:border-stone-800 overflow-hidden hover:shadow-lg
+                  transition-all duration-200 cursor-pointer group hover:border-stone-300 dark:hover:border-stone-700"
                 onClick={() => navigate(`/board/${board.id}`)}
               >
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h3 className="font-semibold text-gray-900 dark:text-gray-100 group-hover:text-brand-600 transition-colors">
-                      {board.title}
-                    </h3>
-                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                      {board._count.columns} columns
-                    </p>
+                <div className={`h-2 bg-gradient-to-r ${boardColors[i % boardColors.length]}`} />
+                <div className="p-5">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <h3 className="font-semibold text-stone-900 dark:text-stone-100 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
+                        {board.title}
+                      </h3>
+                      <p className="text-xs text-stone-400 dark:text-stone-500 mt-1">
+                        {board._count.columns} columns
+                      </p>
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDeleteConfirm({ open: true, boardId: board.id });
+                      }}
+                      className="p-1.5 text-stone-300 dark:text-stone-600 hover:text-red-500 dark:hover:text-red-400 rounded-lg transition-colors
+                        opacity-0 group-hover:opacity-100"
+                      title="Delete board"
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                        />
+                      </svg>
+                    </button>
                   </div>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setDeleteConfirm({ open: true, boardId: board.id });
-                    }}
-                    className="p-1.5 text-gray-300 dark:text-gray-600 hover:text-red-500 rounded-lg transition-colors
-                      opacity-0 group-hover:opacity-100"
-                    title="Delete board"
-                  >
+                  <div className="mt-4 flex items-center text-xs text-stone-400 dark:text-stone-500">
                     <svg
-                      className="w-4 h-4"
+                      className="w-3.5 h-3.5 mr-1"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -198,26 +228,11 @@ export default function BoardsPage() {
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeWidth={2}
-                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                       />
                     </svg>
-                  </button>
-                </div>
-                <div className="mt-4 flex items-center text-xs text-gray-400 dark:text-gray-500">
-                  <svg
-                    className="w-3.5 h-3.5 mr-1"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                  {new Date(board.createdAt).toLocaleDateString()}
+                    {new Date(board.createdAt).toLocaleDateString()}
+                  </div>
                 </div>
               </div>
             ))}

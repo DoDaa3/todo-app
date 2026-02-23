@@ -12,10 +12,10 @@ const priorityConfig: Record<
   Priority,
   { label: string; bg: string; text: string; dot: string }
 > = {
-  LOW: { label: "Low", bg: "bg-gray-100", text: "text-gray-600", dot: "bg-gray-400" },
-  MEDIUM: { label: "Medium", bg: "bg-blue-50", text: "text-blue-700", dot: "bg-blue-500" },
-  HIGH: { label: "High", bg: "bg-orange-50", text: "text-orange-700", dot: "bg-orange-500" },
-  URGENT: { label: "Urgent", bg: "bg-red-50", text: "text-red-700", dot: "bg-red-500" },
+  LOW: { label: "Low", bg: "bg-stone-100 dark:bg-stone-700", text: "text-stone-600 dark:text-stone-300", dot: "bg-stone-400" },
+  MEDIUM: { label: "Medium", bg: "bg-brand-50 dark:bg-brand-900/30", text: "text-brand-700 dark:text-brand-300", dot: "bg-brand-500" },
+  HIGH: { label: "High", bg: "bg-amber-50 dark:bg-amber-900/30", text: "text-amber-700 dark:text-amber-300", dot: "bg-amber-500" },
+  URGENT: { label: "Urgent", bg: "bg-red-50 dark:bg-red-900/30", text: "text-red-700 dark:text-red-300", dot: "bg-red-500" },
 };
 
 function formatDate(dateStr: string | null) {
@@ -45,17 +45,17 @@ export default function TaskCard({
           ref={provided.innerRef}
           {...provided.draggableProps}
           {...provided.dragHandleProps}
-          className={`bg-white dark:bg-gray-800 rounded-xl border p-3.5 mb-2.5 cursor-grab active:cursor-grabbing
+          className={`bg-white dark:bg-stone-800/80 rounded-xl border p-3.5 mb-2.5 cursor-grab active:cursor-grabbing
             transition-all duration-200 group
             ${
               snapshot.isDragging
-                ? "shadow-xl border-brand-300 ring-2 ring-brand-100 scale-[1.02] rotate-[1deg]"
-                : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 shadow-sm hover:shadow-md"
+                ? "shadow-xl border-brand-300 dark:border-brand-600 ring-2 ring-brand-100 dark:ring-brand-800/50 scale-[1.02] rotate-[1deg]"
+                : "border-stone-200/80 dark:border-stone-700/80 hover:border-stone-300 dark:hover:border-stone-600 shadow-sm hover:shadow-md"
             }`}
         >
           {/* Title + Actions */}
           <div className="flex items-start justify-between gap-2">
-            <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex-1 leading-snug">
+            <h4 className="text-sm font-semibold text-stone-900 dark:text-stone-100 flex-1 leading-snug">
               {task.title}
             </h4>
             <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -64,7 +64,7 @@ export default function TaskCard({
                   e.stopPropagation();
                   onEdit(task);
                 }}
-                className="p-1.5 text-gray-400 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors"
+                className="p-1.5 text-stone-400 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-brand-50 dark:hover:bg-brand-900/30 rounded-lg transition-colors"
                 title="Edit task"
               >
                 <svg
@@ -86,7 +86,7 @@ export default function TaskCard({
                   e.stopPropagation();
                   onDelete(task.id);
                 }}
-                className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                className="p-1.5 text-stone-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
                 title="Delete task"
               >
                 <svg
@@ -108,7 +108,7 @@ export default function TaskCard({
 
           {/* Description */}
           {task.description && (
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 line-clamp-2 leading-relaxed">
+            <p className="text-xs text-stone-500 dark:text-stone-400 mt-2 line-clamp-2 leading-relaxed">
               {task.description}
             </p>
           )}
@@ -126,8 +126,8 @@ export default function TaskCard({
               <span
                 className={`inline-flex items-center gap-1 text-[10px] font-medium px-2 py-1 rounded-md ${
                   overdue
-                    ? "bg-red-50 text-red-600 font-semibold"
-                    : "bg-gray-50 text-gray-500"
+                    ? "bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 font-semibold"
+                    : "bg-stone-50 dark:bg-stone-700/50 text-stone-500 dark:text-stone-400"
                 }`}
               >
                 <svg

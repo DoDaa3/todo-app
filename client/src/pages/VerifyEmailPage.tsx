@@ -36,20 +36,20 @@ export default function VerifyEmailPage() {
   }, [token]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-50 to-blue-100 px-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-8 text-center">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-stone-100 via-brand-50 to-stone-100 dark:from-stone-950 dark:via-brand-950/20 dark:to-stone-950 px-4">
+      <div className="bg-white dark:bg-stone-900 rounded-2xl shadow-xl dark:shadow-2xl dark:shadow-brand-900/10 border border-stone-200/50 dark:border-stone-800 w-full max-w-sm p-8 text-center animate-fade-up">
         {status === "loading" && (
           <>
-            <div className="w-12 h-12 border-4 border-brand-200 border-t-brand-600 rounded-full animate-spin mx-auto mb-4" />
-            <p className="text-gray-600">Verifying your email...</p>
+            <div className="w-12 h-12 border-4 border-brand-200 dark:border-brand-800 border-t-brand-600 dark:border-t-brand-400 rounded-full animate-spin mx-auto mb-4" />
+            <p className="text-stone-600 dark:text-stone-400">Verifying your email...</p>
           </>
         )}
 
         {status === "success" && (
           <>
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg
-                className="w-8 h-8 text-green-600"
+                className="w-8 h-8 text-emerald-600 dark:text-emerald-400"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -62,14 +62,14 @@ export default function VerifyEmailPage() {
                 />
               </svg>
             </div>
-            <h1 className="text-xl font-bold text-gray-900 mb-2">
+            <h1 className="text-xl font-bold text-stone-900 dark:text-white mb-2">
               Email Verified!
             </h1>
-            <p className="text-sm text-gray-500 mb-6">{message}</p>
+            <p className="text-sm text-stone-500 dark:text-stone-400 mb-6">{message}</p>
             <Link
               to="/login"
-              className="inline-block px-6 py-2.5 bg-brand-600 text-white text-sm font-medium rounded-lg
-                hover:bg-brand-700 transition-colors"
+              className="inline-block px-6 py-2.5 bg-gradient-to-r from-brand-600 to-brand-700 text-white text-sm font-semibold rounded-lg
+                hover:from-brand-700 hover:to-brand-800 transition-all shadow-md shadow-brand-600/25"
             >
               Sign In
             </Link>
@@ -78,9 +78,9 @@ export default function VerifyEmailPage() {
 
         {status === "error" && (
           <>
-            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg
-                className="w-8 h-8 text-red-600"
+                className="w-8 h-8 text-red-600 dark:text-red-400"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -93,14 +93,14 @@ export default function VerifyEmailPage() {
                 />
               </svg>
             </div>
-            <h1 className="text-xl font-bold text-gray-900 mb-2">
+            <h1 className="text-xl font-bold text-stone-900 dark:text-white mb-2">
               Verification Failed
             </h1>
-            <p className="text-sm text-gray-500 mb-6">{message}</p>
+            <p className="text-sm text-stone-500 dark:text-stone-400 mb-6">{message}</p>
             <Link
               to="/login"
-              className="inline-block px-6 py-2.5 bg-brand-600 text-white text-sm font-medium rounded-lg
-                hover:bg-brand-700 transition-colors"
+              className="inline-block px-6 py-2.5 bg-gradient-to-r from-brand-600 to-brand-700 text-white text-sm font-semibold rounded-lg
+                hover:from-brand-700 hover:to-brand-800 transition-all shadow-md shadow-brand-600/25"
             >
               Go to Sign In
             </Link>

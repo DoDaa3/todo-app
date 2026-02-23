@@ -84,7 +84,7 @@ function ToastNotification({
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
       ),
-      colors: "text-blue-600 bg-blue-50",
+      colors: "text-brand-600 bg-brand-50",
     },
   };
 
@@ -92,18 +92,18 @@ function ToastNotification({
 
   return (
     <div
-      className={`pointer-events-auto flex items-center gap-3 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700
+      className={`pointer-events-auto flex items-center gap-3 bg-white dark:bg-stone-900 rounded-xl shadow-lg border border-stone-100 dark:border-stone-800
         px-4 py-3 min-w-[300px] max-w-[420px] transition-all duration-300
         ${isExiting ? "opacity-0 translate-x-4" : "opacity-100 translate-x-0 animate-slide-in"}`}
     >
       <div className={`shrink-0 p-1 rounded-lg ${colors}`}>{icon}</div>
-      <p className="text-sm text-gray-700 dark:text-gray-300 flex-1">{toast.message}</p>
+      <p className="text-sm text-stone-700 dark:text-stone-300 flex-1">{toast.message}</p>
       <button
         onClick={() => {
           setIsExiting(true);
           setTimeout(() => onDismiss(toast.id), 300);
         }}
-        className="shrink-0 p-1 text-gray-400 hover:text-gray-600 rounded transition-colors"
+        className="shrink-0 p-1 text-stone-400 hover:text-stone-600 rounded transition-colors"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

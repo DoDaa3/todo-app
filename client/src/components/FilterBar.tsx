@@ -18,14 +18,14 @@ export default function FilterBar({
   return (
     <div className="flex flex-wrap items-center gap-3">
       <div className="flex items-center gap-2">
-        <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+        <span className="text-xs font-medium text-stone-500 dark:text-stone-400 uppercase tracking-wide">
           Priority:
         </span>
         <select
           value={priorityFilter}
           onChange={(e) => onPriorityChange(e.target.value as Priority | "ALL")}
-          className="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-2.5 py-1.5 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
-            focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+          className="text-sm border border-stone-300 dark:border-stone-700 rounded-lg px-2.5 py-1.5 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100
+            focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500 dark:focus:border-brand-400 transition-colors"
         >
           <option value="ALL">All</option>
           <option value="URGENT">Urgent</option>
@@ -35,7 +35,7 @@ export default function FilterBar({
         </select>
       </div>
       <div className="flex items-center gap-2">
-        <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+        <span className="text-xs font-medium text-stone-500 dark:text-stone-400 uppercase tracking-wide">
           Due:
         </span>
         <select
@@ -50,8 +50,8 @@ export default function FilterBar({
                 | "NO_DATE"
             )
           }
-          className="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-2.5 py-1.5 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
-            focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+          className="text-sm border border-stone-300 dark:border-stone-700 rounded-lg px-2.5 py-1.5 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100
+            focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500 dark:focus:border-brand-400 transition-colors"
         >
           <option value="ALL">All dates</option>
           <option value="OVERDUE">Overdue</option>
@@ -66,7 +66,7 @@ export default function FilterBar({
             onPriorityChange("ALL");
             onDueDateChange("ALL");
           }}
-          className="text-xs text-brand-600 hover:text-brand-700 font-medium"
+          className="text-xs text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 font-medium transition-colors"
         >
           Clear filters
         </button>

@@ -7,8 +7,8 @@ interface TimelineViewProps {
 }
 
 const priorityColor: Record<Priority, { bg: string; border: string; text: string }> = {
-  LOW: { bg: "bg-gray-200 dark:bg-gray-600", border: "border-gray-300 dark:border-gray-500", text: "text-gray-700 dark:text-gray-200" },
-  MEDIUM: { bg: "bg-blue-200 dark:bg-blue-800", border: "border-blue-300 dark:border-blue-600", text: "text-blue-800 dark:text-blue-200" },
+  LOW: { bg: "bg-stone-200 dark:bg-stone-700", border: "border-stone-300 dark:border-stone-500", text: "text-stone-700 dark:text-stone-200" },
+  MEDIUM: { bg: "bg-brand-200 dark:bg-brand-800", border: "border-brand-300 dark:border-brand-600", text: "text-brand-800 dark:text-brand-200" },
   HIGH: { bg: "bg-orange-200 dark:bg-orange-800", border: "border-orange-300 dark:border-orange-600", text: "text-orange-800 dark:text-orange-200" },
   URGENT: { bg: "bg-red-200 dark:bg-red-800", border: "border-red-300 dark:border-red-600", text: "text-red-800 dark:text-red-200" },
 };
@@ -43,9 +43,9 @@ export default function TimelineView({ columns, onEditTask }: TimelineViewProps)
 
   if (tasksWithDates.length === 0) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-12 text-center shadow-sm">
-        <p className="text-gray-400 dark:text-gray-500 text-sm">No tasks with dates to display on the timeline.</p>
-        <p className="text-gray-300 dark:text-gray-600 text-xs mt-1">Add start dates or due dates to your tasks to see them here.</p>
+      <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-800 p-12 text-center shadow-sm">
+        <p className="text-stone-400 dark:text-stone-500 text-sm">No tasks with dates to display on the timeline.</p>
+        <p className="text-stone-300 dark:text-stone-600 text-xs mt-1">Add start dates or due dates to your tasks to see them here.</p>
       </div>
     );
   }
@@ -72,19 +72,19 @@ export default function TimelineView({ columns, onEditTask }: TimelineViewProps)
   const todayOffset = daysBetween(timelineStart, today);
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm">
+    <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-800 overflow-hidden shadow-sm">
       <div className="overflow-x-auto">
         <div className="min-w-[800px]">
           {/* Header with date markers */}
-          <div className="flex border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/80 relative h-8">
+          <div className="flex border-b border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-900/80 relative h-8">
             <div className="w-52 shrink-0 px-4 flex items-center">
-              <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">Task</span>
+              <span className="text-xs font-semibold text-stone-500 dark:text-stone-400">Task</span>
             </div>
             <div className="flex-1 relative">
               {weekMarkers.map((marker, i) => (
                 <div
                   key={i}
-                  className="absolute top-0 bottom-0 flex items-center text-[10px] text-gray-400 dark:text-gray-500 font-medium border-l border-gray-200 dark:border-gray-700 pl-1"
+                  className="absolute top-0 bottom-0 flex items-center text-[10px] text-stone-400 dark:text-stone-500 font-medium border-l border-stone-200 dark:border-stone-800 pl-1"
                   style={{ left: `${(marker.offset / totalDays) * 100}%` }}
                 >
                   {formatShortDate(marker.date)}
@@ -104,12 +104,12 @@ export default function TimelineView({ columns, onEditTask }: TimelineViewProps)
             return (
               <div
                 key={task.id}
-                className="flex items-center border-b border-gray-100 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700/20 transition-colors h-10"
+                className="flex items-center border-b border-stone-100 dark:border-stone-800/50 hover:bg-stone-50 dark:hover:bg-stone-800/20 transition-colors h-10"
               >
                 <div className="w-52 shrink-0 px-4">
                   <button
                     onClick={() => onEditTask(task)}
-                    className="text-xs font-medium text-gray-900 dark:text-gray-100 truncate block max-w-full text-left hover:text-brand-600 dark:hover:text-brand-400 transition-colors"
+                    className="text-xs font-medium text-stone-900 dark:text-stone-100 truncate block max-w-full text-left hover:text-brand-600 dark:hover:text-brand-400 transition-colors"
                   >
                     {task.title}
                   </button>

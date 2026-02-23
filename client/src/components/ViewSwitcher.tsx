@@ -30,15 +30,15 @@ const views: { key: ViewMode; label: string; icon: string }[] = [
 
 export default function ViewSwitcher({ active, onChange }: ViewSwitcherProps) {
   return (
-    <div className="flex items-center bg-gray-100 dark:bg-gray-700 rounded-lg p-0.5">
+    <div className="flex items-center bg-stone-100 dark:bg-stone-800 rounded-lg p-0.5">
       {views.map((view) => (
         <button
           key={view.key}
           onClick={() => onChange(view.key)}
           className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-md transition-all ${
             active === view.key
-              ? "bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-100 shadow-sm"
-              : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+              ? "bg-white dark:bg-stone-700 text-stone-900 dark:text-stone-100 shadow-sm"
+              : "text-stone-500 dark:text-stone-400 hover:text-stone-700 dark:hover:text-stone-200"
           }`}
           title={view.label}
         >

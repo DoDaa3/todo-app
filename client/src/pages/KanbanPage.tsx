@@ -370,10 +370,10 @@ export default function KanbanPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen bg-stone-50 dark:bg-stone-950">
         <Navbar onSearchOpen={() => setSearchOpen(true)} />
         <div className="flex items-center justify-center py-20">
-          <div className="w-8 h-8 border-4 border-brand-200 border-t-brand-600 rounded-full animate-spin" />
+          <div className="w-8 h-8 border-4 border-brand-200 dark:border-brand-800 border-t-brand-600 dark:border-t-brand-400 rounded-full animate-spin" />
         </div>
       </div>
     );
@@ -382,14 +382,14 @@ export default function KanbanPage() {
   if (!board) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-950 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-stone-50 to-stone-100 dark:from-stone-950 dark:to-stone-900 flex flex-col">
       <Navbar onSearchOpen={() => setSearchOpen(true)} />
-      <div className="px-4 sm:px-6 lg:px-8 py-4 border-b border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm">
+      <div className="px-4 sm:px-6 lg:px-8 py-4 border-b border-stone-200/60 dark:border-stone-800/60 bg-white/80 dark:bg-stone-900/80 backdrop-blur-sm">
         <div className="max-w-full mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex items-center gap-3">
             <button
               onClick={() => navigate("/")}
-              className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              className="p-1.5 text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
             >
               <svg
                 className="w-5 h-5"
@@ -405,7 +405,7 @@ export default function KanbanPage() {
                 />
               </svg>
             </button>
-            <h1 className="text-xl font-bold text-gray-900 dark:text-white">{board.title}</h1>
+            <h1 className="text-xl font-bold text-stone-900 dark:text-white">{board.title}</h1>
             <ViewSwitcher active={viewMode} onChange={setViewMode} />
           </div>
           <FilterBar

@@ -7,8 +7,8 @@ interface CalendarViewProps {
 }
 
 const priorityDot: Record<Priority, string> = {
-  LOW: "bg-gray-400",
-  MEDIUM: "bg-blue-500",
+  LOW: "bg-stone-400",
+  MEDIUM: "bg-brand-500",
   HIGH: "bg-orange-500",
   URGENT: "bg-red-500",
 };
@@ -61,24 +61,24 @@ export default function CalendarView({ columns, onEditTask }: CalendarViewProps)
   const monthLabel = viewDate.toLocaleDateString("en-US", { month: "long", year: "numeric" });
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm">
+    <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-800 overflow-hidden shadow-sm">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-stone-200 dark:border-stone-800">
         <div className="flex items-center gap-2">
           <button
             onClick={prev}
-            className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 transition-colors"
+            className="p-1.5 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 text-stone-500 dark:text-stone-400 transition-colors"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </button>
-          <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 min-w-[160px] text-center">
+          <h3 className="text-sm font-bold text-stone-900 dark:text-stone-100 min-w-[160px] text-center">
             {monthLabel}
           </h3>
           <button
             onClick={next}
-            className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 transition-colors"
+            className="p-1.5 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 text-stone-500 dark:text-stone-400 transition-colors"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -94,9 +94,9 @@ export default function CalendarView({ columns, onEditTask }: CalendarViewProps)
       </div>
 
       {/* Day headers */}
-      <div className="grid grid-cols-7 border-b border-gray-200 dark:border-gray-700">
+      <div className="grid grid-cols-7 border-b border-stone-200 dark:border-stone-800">
         {DAYS.map((day) => (
-          <div key={day} className="text-center text-xs font-semibold text-gray-500 dark:text-gray-400 py-2">
+          <div key={day} className="text-center text-xs font-semibold text-stone-500 dark:text-stone-400 py-2">
             {day}
           </div>
         ))}
@@ -106,7 +106,7 @@ export default function CalendarView({ columns, onEditTask }: CalendarViewProps)
       <div className="grid grid-cols-7">
         {cells.map((day, i) => {
           if (day === null) {
-            return <div key={`empty-${i}`} className="min-h-[100px] bg-gray-50/50 dark:bg-gray-800/50 border-b border-r border-gray-100 dark:border-gray-700/50" />;
+            return <div key={`empty-${i}`} className="min-h-[100px] bg-stone-50/50 dark:bg-stone-900/50 border-b border-r border-stone-100 dark:border-stone-800/50" />;
           }
           const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
           const isToday = dateStr === todayStr;
@@ -115,15 +115,15 @@ export default function CalendarView({ columns, onEditTask }: CalendarViewProps)
           return (
             <div
               key={dateStr}
-              className={`min-h-[100px] border-b border-r border-gray-100 dark:border-gray-700/50 p-1.5 ${
-                isToday ? "bg-brand-50/50 dark:bg-brand-900/10" : "hover:bg-gray-50 dark:hover:bg-gray-700/20"
+              className={`min-h-[100px] border-b border-r border-stone-100 dark:border-stone-800/50 p-1.5 ${
+                isToday ? "bg-brand-50/50 dark:bg-brand-900/10" : "hover:bg-stone-50 dark:hover:bg-stone-800/20"
               } transition-colors`}
             >
               <span
                 className={`inline-flex items-center justify-center w-6 h-6 text-xs font-medium rounded-full mb-1 ${
                   isToday
                     ? "bg-brand-600 text-white"
-                    : "text-gray-700 dark:text-gray-300"
+                    : "text-stone-700 dark:text-stone-300"
                 }`}
               >
                 {day}
@@ -134,14 +134,14 @@ export default function CalendarView({ columns, onEditTask }: CalendarViewProps)
                     key={task.id}
                     onClick={() => onEditTask(task)}
                     className="w-full text-left text-[10px] font-medium px-1.5 py-0.5 rounded truncate flex items-center gap-1
-                      bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                      bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-200 hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors"
                   >
                     <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${priorityDot[task.priority]}`} />
                     <span className="truncate">{task.title}</span>
                   </button>
                 ))}
                 {dayTasks.length > 3 && (
-                  <span className="text-[10px] text-gray-400 dark:text-gray-500 px-1.5">
+                  <span className="text-[10px] text-stone-400 dark:text-stone-500 px-1.5">
                     +{dayTasks.length - 3} more
                   </span>
                 )}

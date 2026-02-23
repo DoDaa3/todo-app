@@ -62,16 +62,16 @@ export default function WorkspacesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
+    <div className="min-h-screen bg-stone-50 dark:bg-stone-950 transition-colors">
       <Navbar />
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            <h1 className="text-2xl font-bold text-stone-900 dark:text-white">
               My Workspaces
             </h1>
-            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            <p className="mt-1 text-sm text-stone-500 dark:text-stone-400">
               Collaborate with your team across projects
             </p>
           </div>
@@ -108,9 +108,9 @@ export default function WorkspacesPage() {
             animate={{ opacity: 1, y: 0 }}
             className="text-center py-20"
           >
-            <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 bg-stone-100 dark:bg-stone-900 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <svg
-                className="w-8 h-8 text-gray-400 dark:text-gray-500"
+                className="w-8 h-8 text-stone-400 dark:text-stone-500"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -123,7 +123,7 @@ export default function WorkspacesPage() {
                 />
               </svg>
             </div>
-            <p className="text-gray-500 dark:text-gray-400 text-sm">
+            <p className="text-stone-500 dark:text-stone-400 text-sm">
               No workspaces yet. Create one to start collaborating with your team.
             </p>
           </motion.div>
@@ -142,8 +142,8 @@ export default function WorkspacesPage() {
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ delay: index * 0.05 }}
                   onClick={() => navigate(`/workspace/${workspace.id}`)}
-                  className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700
-                    p-5 hover:shadow-lg dark:hover:shadow-gray-900/30 transition-all cursor-pointer group"
+                  className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-800
+                    p-5 hover:shadow-lg dark:hover:shadow-stone-950/30 transition-all cursor-pointer group"
                 >
                   {/* Workspace Icon + Name */}
                   <div className="flex items-start gap-3 mb-3">
@@ -153,11 +153,11 @@ export default function WorkspacesPage() {
                       </span>
                     </div>
                     <div className="min-w-0">
-                      <h3 className="font-semibold text-gray-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors truncate">
+                      <h3 className="font-semibold text-stone-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors truncate">
                         {workspace.name}
                       </h3>
                       {workspace.description && (
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-2">
+                        <p className="text-xs text-stone-500 dark:text-stone-400 mt-0.5 line-clamp-2">
                           {workspace.description}
                         </p>
                       )}
@@ -165,8 +165,8 @@ export default function WorkspacesPage() {
                   </div>
 
                   {/* Stats */}
-                  <div className="flex items-center gap-4 pt-3 border-t border-gray-100 dark:border-gray-700">
-                    <div className="flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500">
+                  <div className="flex items-center gap-4 pt-3 border-t border-stone-100 dark:border-stone-800">
+                    <div className="flex items-center gap-1.5 text-xs text-stone-400 dark:text-stone-500">
                       <svg
                         className="w-3.5 h-3.5"
                         fill="none"
@@ -187,7 +187,7 @@ export default function WorkspacesPage() {
                           : "members"}
                       </span>
                     </div>
-                    <div className="flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500">
+                    <div className="flex items-center gap-1.5 text-xs text-stone-400 dark:text-stone-500">
                       <svg
                         className="w-3.5 h-3.5"
                         fill="none"
@@ -241,12 +241,12 @@ export default function WorkspacesPage() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
               transition={{ type: "spring", duration: 0.3 }}
-              className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md p-6"
+              className="relative bg-white dark:bg-stone-900 rounded-2xl shadow-2xl w-full max-w-md p-6"
             >
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
+              <h2 className="text-lg font-semibold text-stone-900 dark:text-white mb-1">
                 Create Workspace
               </h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">
+              <p className="text-sm text-stone-500 dark:text-stone-400 mb-5">
                 Organize your boards and collaborate with your team.
               </p>
               <form onSubmit={handleCreate}>
@@ -254,7 +254,7 @@ export default function WorkspacesPage() {
                   <div>
                     <label
                       htmlFor="workspace-name"
-                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                      className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1"
                     >
                       Name
                     </label>
@@ -264,9 +264,9 @@ export default function WorkspacesPage() {
                       value={newName}
                       onChange={(e) => setNewName(e.target.value)}
                       placeholder="e.g. Engineering Team"
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm
-                        bg-white dark:bg-gray-700 text-gray-900 dark:text-white
-                        placeholder-gray-400 dark:placeholder-gray-500
+                      className="w-full px-3 py-2 border border-stone-300 dark:border-stone-700 rounded-lg text-sm
+                        bg-white dark:bg-stone-800 text-stone-900 dark:text-white
+                        placeholder-stone-400 dark:placeholder-stone-500
                         focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent
                         transition-colors"
                       autoFocus
@@ -275,7 +275,7 @@ export default function WorkspacesPage() {
                   <div>
                     <label
                       htmlFor="workspace-description"
-                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                      className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1"
                     >
                       Description
                     </label>
@@ -285,9 +285,9 @@ export default function WorkspacesPage() {
                       onChange={(e) => setNewDescription(e.target.value)}
                       placeholder="What is this workspace for?"
                       rows={3}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm
-                        bg-white dark:bg-gray-700 text-gray-900 dark:text-white
-                        placeholder-gray-400 dark:placeholder-gray-500
+                      className="w-full px-3 py-2 border border-stone-300 dark:border-stone-700 rounded-lg text-sm
+                        bg-white dark:bg-stone-800 text-stone-900 dark:text-white
+                        placeholder-stone-400 dark:placeholder-stone-500
                         focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent
                         resize-none transition-colors"
                     />
@@ -297,8 +297,8 @@ export default function WorkspacesPage() {
                   <button
                     type="button"
                     onClick={closeModal}
-                    className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300
-                      bg-gray-100 dark:bg-gray-700 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600
+                    className="flex-1 px-4 py-2.5 text-sm font-medium text-stone-700 dark:text-stone-300
+                      bg-stone-100 dark:bg-stone-800 rounded-xl hover:bg-stone-200 dark:hover:bg-stone-700
                       transition-colors"
                   >
                     Cancel

@@ -16,10 +16,10 @@ const priorityOrder: Record<Priority, number> = {
 };
 
 const priorityStyle: Record<Priority, string> = {
-  LOW: "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300",
-  MEDIUM: "bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
-  HIGH: "bg-orange-50 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300",
-  URGENT: "bg-red-50 text-red-700 dark:bg-red-900/40 dark:text-red-300",
+  LOW: "bg-stone-100 text-stone-600 dark:bg-stone-800 dark:text-stone-300",
+  MEDIUM: "bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-300",
+  HIGH: "bg-orange-50 text-orange-700 dark:bg-amber-900/30 dark:text-orange-300",
+  URGENT: "bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-300",
 };
 
 type SortKey = "title" | "priority" | "dueDate" | "status";
@@ -81,36 +81,36 @@ export default function ListView({
   }
 
   function SortIcon({ col }: { col: SortKey }) {
-    if (sortKey !== col) return <span className="text-gray-300 dark:text-gray-600 ml-1">&uarr;&darr;</span>;
+    if (sortKey !== col) return <span className="text-stone-300 dark:text-stone-600 ml-1">&uarr;&darr;</span>;
     return <span className="text-brand-600 ml-1">{sortDir === "asc" ? "\u2191" : "\u2193"}</span>;
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm">
+    <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-800 overflow-hidden shadow-sm">
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/80">
+            <tr className="border-b border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-900/80">
               <th
-                className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-300 cursor-pointer select-none hover:bg-gray-100 dark:hover:bg-gray-700/50"
+                className="text-left px-4 py-3 font-semibold text-stone-600 dark:text-stone-300 cursor-pointer select-none hover:bg-stone-100 dark:hover:bg-stone-800/50"
                 onClick={() => toggleSort("title")}
               >
                 Task <SortIcon col="title" />
               </th>
               <th
-                className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-300 cursor-pointer select-none hover:bg-gray-100 dark:hover:bg-gray-700/50 w-28"
+                className="text-left px-4 py-3 font-semibold text-stone-600 dark:text-stone-300 cursor-pointer select-none hover:bg-stone-100 dark:hover:bg-stone-800/50 w-28"
                 onClick={() => toggleSort("status")}
               >
                 Status <SortIcon col="status" />
               </th>
               <th
-                className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-300 cursor-pointer select-none hover:bg-gray-100 dark:hover:bg-gray-700/50 w-28"
+                className="text-left px-4 py-3 font-semibold text-stone-600 dark:text-stone-300 cursor-pointer select-none hover:bg-stone-100 dark:hover:bg-stone-800/50 w-28"
                 onClick={() => toggleSort("priority")}
               >
                 Priority <SortIcon col="priority" />
               </th>
               <th
-                className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-300 cursor-pointer select-none hover:bg-gray-100 dark:hover:bg-gray-700/50 w-36"
+                className="text-left px-4 py-3 font-semibold text-stone-600 dark:text-stone-300 cursor-pointer select-none hover:bg-stone-100 dark:hover:bg-stone-800/50 w-36"
                 onClick={() => toggleSort("dueDate")}
               >
                 Due Date <SortIcon col="dueDate" />
@@ -121,7 +121,7 @@ export default function ListView({
           <tbody>
             {sorted.length === 0 && (
               <tr>
-                <td colSpan={5} className="text-center py-12 text-gray-400 dark:text-gray-500">
+                <td colSpan={5} className="text-center py-12 text-stone-400 dark:text-stone-500">
                   No tasks to display
                 </td>
               </tr>
@@ -129,17 +129,17 @@ export default function ListView({
             {sorted.map((task) => (
               <tr
                 key={task.id}
-                className="border-b border-gray-100 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors cursor-pointer"
+                className="border-b border-stone-100 dark:border-stone-800/50 hover:bg-stone-50 dark:hover:bg-stone-800/30 transition-colors cursor-pointer"
                 onClick={() => onEditTask(task)}
               >
                 <td className="px-4 py-3">
-                  <div className="font-medium text-gray-900 dark:text-gray-100">{task.title}</div>
+                  <div className="font-medium text-stone-900 dark:text-stone-100">{task.title}</div>
                   {task.description && (
-                    <div className="text-xs text-gray-400 dark:text-gray-500 mt-0.5 line-clamp-1">{task.description}</div>
+                    <div className="text-xs text-stone-400 dark:text-stone-500 mt-0.5 line-clamp-1">{task.description}</div>
                   )}
                 </td>
                 <td className="px-4 py-3">
-                  <span className="inline-block text-xs font-medium px-2 py-1 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
+                  <span className="inline-block text-xs font-medium px-2 py-1 rounded-md bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300">
                     {task.columnTitle}
                   </span>
                 </td>
@@ -149,7 +149,7 @@ export default function ListView({
                   </span>
                 </td>
                 <td className="px-4 py-3">
-                  <span className={`text-xs ${isOverdue(task.dueDate) ? "text-red-500 font-semibold" : "text-gray-500 dark:text-gray-400"}`}>
+                  <span className={`text-xs ${isOverdue(task.dueDate) ? "text-red-500 font-semibold" : "text-stone-500 dark:text-stone-400"}`}>
                     {formatDate(task.dueDate)}
                   </span>
                 </td>
@@ -157,7 +157,7 @@ export default function ListView({
                   <div className="flex items-center gap-1">
                     <button
                       onClick={(e) => { e.stopPropagation(); onEditTask(task); }}
-                      className="p-1.5 text-gray-400 hover:text-brand-600 rounded-lg transition-colors"
+                      className="p-1.5 text-stone-400 hover:text-brand-600 rounded-lg transition-colors"
                       title="Edit"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -167,7 +167,7 @@ export default function ListView({
                     </button>
                     <button
                       onClick={(e) => { e.stopPropagation(); onDeleteTask(task.id); }}
-                      className="p-1.5 text-gray-400 hover:text-red-500 rounded-lg transition-colors"
+                      className="p-1.5 text-stone-400 hover:text-red-500 rounded-lg transition-colors"
                       title="Delete"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -13,35 +13,38 @@ export default function Navbar({ onSearchOpen }: NavbarProps) {
   const location = useLocation();
 
   return (
-    <nav className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
+    <nav className="bg-white/80 dark:bg-stone-900/80 backdrop-blur-xl border-b border-stone-200/60 dark:border-stone-800/60 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-14 items-center">
           <div className="flex items-center gap-6">
-            <Link to="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center">
+            <Link to="/" className="flex items-center gap-2.5 group">
+              <div className="w-8 h-8 bg-gradient-to-br from-brand-500 to-brand-700 rounded-lg flex items-center justify-center shadow-md shadow-brand-500/25 group-hover:shadow-brand-500/40 transition-shadow">
                 <svg
-                  className="w-5 h-5 text-white"
+                  className="w-4.5 h-4.5 text-white"
+                  viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
-                  viewBox="0 0 24 24"
+                  strokeWidth={2.5}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7"
-                  />
+                  <rect x="3" y="3" width="7" height="9" rx="1.5" />
+                  <rect x="14" y="3" width="7" height="5" rx="1.5" />
+                  <rect x="14" y="12" width="7" height="9" rx="1.5" />
+                  <rect x="3" y="16" width="7" height="5" rx="1.5" />
                 </svg>
               </div>
-              <span className="font-bold text-lg text-gray-900 dark:text-white">Kanban</span>
+              <span className="font-bold text-lg tracking-tight text-stone-900 dark:text-white">
+                Flow<span className="text-brand-600 dark:text-brand-400">Board</span>
+              </span>
             </Link>
             {user && (
               <Link
                 to="/"
-                className={`text-sm font-medium ${
+                className={`text-sm font-medium transition-colors ${
                   location.pathname === "/"
-                    ? "text-brand-600"
-                    : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                    ? "text-brand-600 dark:text-brand-400"
+                    : "text-stone-500 dark:text-stone-400 hover:text-stone-700 dark:hover:text-stone-200"
                 }`}
               >
                 My Boards
@@ -49,20 +52,20 @@ export default function Navbar({ onSearchOpen }: NavbarProps) {
             )}
           </div>
           {user && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               {/* Search button */}
               {onSearchOpen && (
                 <button
                   onClick={onSearchOpen}
-                  className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-400 dark:text-gray-500
-                    bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                  className="flex items-center gap-2 px-3 py-1.5 text-sm text-stone-400 dark:text-stone-500
+                    bg-stone-100 dark:bg-stone-800 rounded-lg hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                       d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
                   <span className="hidden sm:inline">Search</span>
-                  <kbd className="hidden sm:inline text-[10px] font-medium bg-gray-200 dark:bg-gray-600 px-1.5 py-0.5 rounded">
+                  <kbd className="hidden sm:inline text-[10px] font-medium bg-stone-200 dark:bg-stone-700 text-stone-500 dark:text-stone-400 px-1.5 py-0.5 rounded">
                     {navigator.platform.includes("Mac") ? "\u2318K" : "Ctrl+K"}
                   </kbd>
                 </button>
@@ -71,8 +74,8 @@ export default function Navbar({ onSearchOpen }: NavbarProps) {
               {/* Dark mode toggle */}
               <button
                 onClick={toggleDarkMode}
-                className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200
-                  rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                className="p-2 text-stone-500 dark:text-stone-400 hover:text-amber-500 dark:hover:text-amber-400
+                  rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
                 title={darkMode ? "Light mode" : "Dark mode"}
               >
                 {darkMode ? (
@@ -92,12 +95,17 @@ export default function Navbar({ onSearchOpen }: NavbarProps) {
               <NotificationBell />
 
               {/* User info */}
-              <span className="text-sm text-gray-600 dark:text-gray-400 hidden sm:block ml-1">
-                {user.name}
-              </span>
+              <div className="hidden sm:flex items-center gap-2 ml-2 pl-2 border-l border-stone-200 dark:border-stone-700">
+                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center text-white text-xs font-bold">
+                  {user.name?.charAt(0)?.toUpperCase() || "U"}
+                </div>
+                <span className="text-sm text-stone-600 dark:text-stone-400 font-medium">
+                  {user.name}
+                </span>
+              </div>
               <button
                 onClick={logout}
-                className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 font-medium ml-1"
+                className="text-sm text-stone-400 dark:text-stone-500 hover:text-red-500 dark:hover:text-red-400 font-medium ml-1 transition-colors"
               >
                 Sign Out
               </button>
