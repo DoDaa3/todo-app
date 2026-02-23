@@ -51,3 +51,81 @@ export async function sendVerificationEmail(
     `,
   });
 }
+
+export async function sendDueDateReminderEmail(
+  to: string,
+  name: string,
+  taskTitle: string,
+  dueDate: Date
+) {
+  const formattedDate = dueDate.toLocaleDateString("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
+  await transporter.sendMail({
+    from: fromAddress,
+    to,
+    subject: `Due date reminder: "${taskTitle}" — Kanban App`,
+    html: `
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 20px;">
+        <div style="text-align: center; margin-bottom: 32px;">
+          <div style="display: inline-block; background: #2563eb; border-radius: 12px; padding: 12px;">
+            <span style="color: white; font-size: 24px; font-weight: bold;">K</span>
+          </div>
+        </div>
+        <h1 style="font-size: 24px; font-weight: 700; color: #111827; text-align: center; margin-bottom: 8px;">
+          Due Date Reminder
+        </h1>
+        <p style="color: #6b7280; text-align: center; margin-bottom: 16px;">
+          Hi ${name}, this is a reminder that the following task is due soon:
+        </p>
+        <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+          <h2 style="font-size: 18px; color: #111827; margin: 0 0 8px 0;">${taskTitle}</h2>
+          <p style="color: #ef4444; font-weight: 600; margin: 0;">Due: ${formattedDate}</p>
+        </div>
+        <p style="color: #9ca3af; font-size: 13px; text-align: center;">
+          Log in to your Kanban App to manage this task.
+        </p>
+      </div>
+    `,
+  });
+}
+
+export async function sendWorkspaceInviteEmail(
+  to: string,
+  inviterName: string,
+  workspaceName: string
+) {
+  const clientUrl = process.env.CLIENT_URL || "http://localhost:5173";
+
+  await transporter.sendMail({
+    from: fromAddress,
+    to,
+    subject: `You've been invited to "${workspaceName}" — Kanban App`,
+    html: `
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 20px;">
+        <div style="text-align: center; margin-bottom: 32px;">
+          <div style="display: inline-block; background: #2563eb; border-radius: 12px; padding: 12px;">
+            <span style="color: white; font-size: 24px; font-weight: bold;">K</span>
+          </div>
+        </div>
+        <h1 style="font-size: 24px; font-weight: 700; color: #111827; text-align: center; margin-bottom: 8px;">
+          Workspace Invitation
+        </h1>
+        <p style="color: #6b7280; text-align: center; margin-bottom: 32px;">
+          ${inviterName} has invited you to join the workspace <strong>"${workspaceName}"</strong>.
+        </p>
+        <div style="text-align: center; margin-bottom: 32px;">
+          <a href="${clientUrl}"
+             style="display: inline-block; background: #2563eb; color: white; font-weight: 600;
+                    padding: 12px 32px; border-radius: 8px; text-decoration: none; font-size: 14px;">
+            Open Kanban App
+          </a>
+        </div>
+      </div>
+    `,
+  });
+}
