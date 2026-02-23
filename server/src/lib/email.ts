@@ -1,9 +1,15 @@
-import { Resend } from "resend";
+import nodemailer from "nodemailer";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.GMAIL_USER,
+    pass: process.env.GMAIL_APP_PASSWORD,
+  },
+});
 
 const fromAddress =
-  process.env.EMAIL_FROM || "Kanban App <onboarding@resend.dev>";
+  process.env.EMAIL_FROM || `Kanban App <${process.env.GMAIL_USER}>`;
 
 export async function sendVerificationEmail(
   to: string,
@@ -13,7 +19,7 @@ export async function sendVerificationEmail(
   const clientUrl = process.env.CLIENT_URL || "http://localhost:5173";
   const verifyUrl = `${clientUrl}/verify-email?token=${token}`;
 
-  const { error } = await resend.emails.send({
+  await transporter.sendMail({
     from: fromAddress,
     to,
     subject: "Verify your email — Kanban App",
@@ -44,8 +50,4 @@ export async function sendVerificationEmail(
       </div>
     `,
   });
-
-  if (error) {
-    throw new Error(`Resend error: ${error.message}`);
-  }
 }
