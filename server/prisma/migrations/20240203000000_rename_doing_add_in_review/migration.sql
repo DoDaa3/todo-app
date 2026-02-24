@@ -3,7 +3,7 @@ UPDATE "Column"
 SET title = 'In Progress', "updatedAt" = NOW()
 WHERE title = 'Doing';
 
--- For boards that still have exactly 3 columns (To Do, In Progress, Done),
+-- For boards that have exactly 3 columns (To Do, In Progress, Done),
 -- shift "Done" from position 2 to position 3 to make room for "In Review"
 UPDATE "Column"
 SET position = 3, "updatedAt" = NOW()
@@ -16,9 +16,10 @@ WHERE title = 'Done'
   );
 
 -- Insert "In Review" at position 2 for those same boards
+-- Uses md5 for ID generation (compatible with all PostgreSQL versions)
 INSERT INTO "Column" (id, title, position, "boardId", "createdAt", "updatedAt")
 SELECT
-  gen_random_uuid(),
+  'c' || md5(c."boardId" || clock_timestamp()::text),
   'In Review',
   2,
   c."boardId",
