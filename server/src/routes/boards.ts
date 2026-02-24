@@ -5,6 +5,18 @@ import { authenticate, AuthRequest } from "../middleware/auth";
 const router = Router();
 router.use(authenticate);
 
+// Helper: check if user owns or has access to a board
+async function getBoardAccess(boardId: string, userId: string): Promise<"OWNER" | "EDITOR" | "VIEWER" | null> {
+  const board = await prisma.board.findUnique({ where: { id: boardId } });
+  if (!board) return null;
+  if (board.userId === userId) return "OWNER";
+  const share = await prisma.boardShare.findUnique({
+    where: { boardId_userId: { boardId, userId } },
+  });
+  if (share) return share.role;
+  return null;
+}
+
 const taskIncludes = {
   subtasks: { orderBy: { position: "asc" as const } },
   labels: { include: { label: true } },
@@ -13,17 +25,36 @@ const taskIncludes = {
   dependents: { include: { task: { select: { id: true, title: true } } } },
 };
 
-// List all boards for the authenticated user
+// List all boards for the authenticated user (owned + shared)
 router.get("/", async (req: AuthRequest, res: Response) => {
   try {
-    const boards = await prisma.board.findMany({
-      where: { userId: req.userId },
-      orderBy: { createdAt: "desc" },
-      include: {
-        _count: { select: { columns: true } },
-      },
-    });
-    res.json(boards);
+    const [ownedBoards, sharedEntries] = await Promise.all([
+      prisma.board.findMany({
+        where: { userId: req.userId },
+        orderBy: { createdAt: "desc" },
+        include: { _count: { select: { columns: true } } },
+      }),
+      prisma.boardShare.findMany({
+        where: { userId: req.userId },
+        include: {
+          board: {
+            include: {
+              _count: { select: { columns: true } },
+              user: { select: { id: true, name: true } },
+            },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+      }),
+    ]);
+
+    const sharedBoards = sharedEntries.map((s) => ({
+      ...s.board,
+      sharedRole: s.role,
+      ownerName: s.board.user?.name,
+    }));
+
+    res.json({ owned: ownedBoards, shared: sharedBoards });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Internal server error" });
@@ -66,8 +97,13 @@ router.post("/", async (req: AuthRequest, res: Response) => {
 // Get a single board with all columns, tasks, labels, and sprints
 router.get("/:id", async (req: AuthRequest, res: Response) => {
   try {
-    const board = await prisma.board.findFirst({
-      where: { id: req.params.id, userId: req.userId },
+    const access = await getBoardAccess(req.params.id, req.userId!);
+    if (!access) {
+      return res.status(404).json({ error: "Board not found" });
+    }
+
+    const board = await prisma.board.findUnique({
+      where: { id: req.params.id },
       include: {
         columns: {
           orderBy: { position: "asc" },
@@ -83,14 +119,17 @@ router.get("/:id", async (req: AuthRequest, res: Response) => {
           orderBy: { createdAt: "desc" },
           include: { _count: { select: { tasks: true } } },
         },
+        shares: {
+          include: {
+            user: { select: { id: true, name: true, email: true, avatarUrl: true } },
+          },
+        },
+        user: { select: { id: true, name: true, email: true } },
       },
     });
 
-    if (!board) {
-      return res.status(404).json({ error: "Board not found" });
-    }
-
-    res.json(board);
+    // Attach the user's role for the frontend
+    res.json({ ...board, userRole: access });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Internal server error" });
@@ -100,10 +139,8 @@ router.get("/:id", async (req: AuthRequest, res: Response) => {
 // Get board stats
 router.get("/:id/stats", async (req: AuthRequest, res: Response) => {
   try {
-    const board = await prisma.board.findFirst({
-      where: { id: req.params.id, userId: req.userId },
-    });
-    if (!board) {
+    const access = await getBoardAccess(req.params.id, req.userId!);
+    if (!access) {
       return res.status(404).json({ error: "Board not found" });
     }
 

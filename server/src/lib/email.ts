@@ -94,6 +94,47 @@ export async function sendDueDateReminderEmail(
   });
 }
 
+export async function sendBoardInviteEmail(
+  to: string,
+  inviterName: string,
+  boardTitle: string,
+  role: string
+) {
+  const clientUrl = process.env.CLIENT_URL || "http://localhost:5173";
+  const roleLabel = role === "EDITOR" ? "Editor (can edit)" : "Viewer (view only)";
+
+  await transporter.sendMail({
+    from: fromAddress,
+    to,
+    subject: `${inviterName} shared "${boardTitle}" with you — FlowBoard`,
+    html: `
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 20px;">
+        <div style="text-align: center; margin-bottom: 32px;">
+          <div style="display: inline-block; background: linear-gradient(135deg, #8b5cf6, #6d28d9); border-radius: 12px; padding: 12px;">
+            <span style="color: white; font-size: 24px; font-weight: bold;">F</span>
+          </div>
+        </div>
+        <h1 style="font-size: 24px; font-weight: 700; color: #111827; text-align: center; margin-bottom: 8px;">
+          Board Shared With You
+        </h1>
+        <p style="color: #6b7280; text-align: center; margin-bottom: 24px;">
+          <strong>${inviterName}</strong> shared the board <strong>"${boardTitle}"</strong> with you.
+        </p>
+        <div style="background: #f5f3ff; border: 1px solid #ddd6fe; border-radius: 12px; padding: 16px; text-align: center; margin-bottom: 24px;">
+          <p style="color: #7c3aed; font-weight: 600; margin: 0;">Your role: ${roleLabel}</p>
+        </div>
+        <div style="text-align: center; margin-bottom: 32px;">
+          <a href="${clientUrl}"
+             style="display: inline-block; background: linear-gradient(135deg, #7c3aed, #6d28d9); color: white; font-weight: 600;
+                    padding: 12px 32px; border-radius: 8px; text-decoration: none; font-size: 14px;">
+            Open FlowBoard
+          </a>
+        </div>
+      </div>
+    `,
+  });
+}
+
 export async function sendWorkspaceInviteEmail(
   to: string,
   inviterName: string,

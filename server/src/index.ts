@@ -17,6 +17,7 @@ import subtaskRoutes from "./routes/subtasks";
 import labelRoutes from "./routes/labels";
 import notificationRoutes from "./routes/notifications";
 import searchRoutes from "./routes/search";
+import shareRoutes from "./routes/shares";
 
 const app = express();
 const httpServer = createServer(app);
@@ -54,6 +55,7 @@ app.use("/api/subtasks", subtaskRoutes);
 app.use("/api/labels", labelRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/search", searchRoutes);
+app.use("/api/boards", shareRoutes);
 
 // Initialize Socket.io (only works in non-serverless environments)
 if (!process.env.VERCEL) {

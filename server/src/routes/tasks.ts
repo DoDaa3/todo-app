@@ -48,13 +48,31 @@ const moveTaskSchema = z.object({
   position: z.number().int().min(0),
 });
 
+// Check if user has write access to a board (owner or EDITOR)
+async function verifyBoardWriteAccess(boardId: string, userId: string): Promise<boolean> {
+  const board = await prisma.board.findUnique({ where: { id: boardId } });
+  if (!board) return false;
+  if (board.userId === userId) return true;
+  const share = await prisma.boardShare.findUnique({
+    where: { boardId_userId: { boardId, userId } },
+  });
+  return share?.role === "EDITOR";
+}
+
 async function verifyColumnOwnership(columnId: string, userId: string) {
   const column = await prisma.column.findUnique({
     where: { id: columnId },
     include: { board: true },
   });
-  if (!column || column.board.userId !== userId) return null;
-  return column;
+  if (!column) return null;
+  // Owner has direct access
+  if (column.board.userId === userId) return column;
+  // Check shared EDITOR access
+  const share = await prisma.boardShare.findUnique({
+    where: { boardId_userId: { boardId: column.boardId, userId } },
+  });
+  if (share?.role === "EDITOR") return column;
+  return null;
 }
 
 // Get a single task with all details
@@ -77,9 +95,13 @@ router.get("/:id", async (req: AuthRequest, res: Response) => {
         column: { include: { board: true } },
       },
     });
-    if (!task || task.column.board.userId !== req.userId) {
-      return res.status(404).json({ error: "Task not found" });
-    }
+    if (!task) return res.status(404).json({ error: "Task not found" });
+    // Check read access (owner or any share role)
+    const isOwner = task.column.board.userId === req.userId;
+    const hasShare = !isOwner && await prisma.boardShare.findUnique({
+      where: { boardId_userId: { boardId: task.column.boardId, userId: req.userId! } },
+    });
+    if (!isOwner && !hasShare) return res.status(404).json({ error: "Task not found" });
     res.json(task);
   } catch (err) {
     console.error(err);
@@ -191,8 +213,9 @@ router.patch("/:id", async (req: AuthRequest, res: Response) => {
       where: { id: req.params.id },
       include: { column: { include: { board: true } }, assignees: true },
     });
-    if (!task || task.column.board.userId !== req.userId) {
-      return res.status(404).json({ error: "Task not found" });
+    if (!task) return res.status(404).json({ error: "Task not found" });
+    if (!(await verifyBoardWriteAccess(task.column.boardId, req.userId!))) {
+      return res.status(403).json({ error: "You have view-only access to this board" });
     }
 
     if (data.assigneeIds !== undefined) {
@@ -281,8 +304,9 @@ router.post("/:id/dependencies", async (req: AuthRequest, res: Response) => {
       where: { id: req.params.id },
       include: { column: { include: { board: true } } },
     });
-    if (!task || task.column.board.userId !== req.userId) {
-      return res.status(404).json({ error: "Task not found" });
+    if (!task) return res.status(404).json({ error: "Task not found" });
+    if (!(await verifyBoardWriteAccess(task.column.boardId, req.userId!))) {
+      return res.status(403).json({ error: "You have view-only access to this board" });
     }
 
     const dep = await prisma.taskDependency.create({
@@ -316,8 +340,9 @@ router.patch("/:id/move", async (req: AuthRequest, res: Response) => {
       where: { id: req.params.id },
       include: { column: { include: { board: true } } },
     });
-    if (!task || task.column.board.userId !== req.userId) {
-      return res.status(404).json({ error: "Task not found" });
+    if (!task) return res.status(404).json({ error: "Task not found" });
+    if (!(await verifyBoardWriteAccess(task.column.boardId, req.userId!))) {
+      return res.status(403).json({ error: "You have view-only access to this board" });
     }
 
     const targetColumn = await verifyColumnOwnership(data.columnId, req.userId!);
@@ -399,8 +424,9 @@ router.delete("/:id", async (req: AuthRequest, res: Response) => {
       where: { id: req.params.id },
       include: { column: { include: { board: true } } },
     });
-    if (!task || task.column.board.userId !== req.userId) {
-      return res.status(404).json({ error: "Task not found" });
+    if (!task) return res.status(404).json({ error: "Task not found" });
+    if (!(await verifyBoardWriteAccess(task.column.boardId, req.userId!))) {
+      return res.status(403).json({ error: "You have view-only access to this board" });
     }
 
     await prisma.$transaction(async (tx) => {

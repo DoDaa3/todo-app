@@ -28,6 +28,11 @@ enum SprintStatus {
   COMPLETED
 }
 
+enum BoardRole {
+  EDITOR
+  VIEWER
+}
+
 enum NotificationType {
   TASK_ASSIGNED
   COMMENT_ADDED
@@ -35,6 +40,7 @@ enum NotificationType {
   SPRINT_STARTING
   DUE_DATE_APPROACHING
   STATUS_CHANGED
+  BOARD_SHARED
 }
 
 // ─── User ───────────────────────────────────────────────────────────
@@ -50,6 +56,7 @@ model User {
   verificationToken String?  @unique
 
   boards            Board[]
+  sharedBoards      BoardShare[]
   workspaces        WorkspaceMember[]
   comments          Comment[]
   notifications     Notification[]
@@ -99,11 +106,28 @@ model Board {
   columns     Column[]
   labels      Label[]
   sprints     Sprint[]
+  shares      BoardShare[]
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
 
   @@index([userId])
   @@index([workspaceId])
+}
+
+// ─── Board Sharing ────────────────────────────────────────────────
+
+model BoardShare {
+  id        String    @id @default(cuid())
+  board     Board     @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  boardId   String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  role      BoardRole @default(VIEWER)
+  createdAt DateTime  @default(now())
+
+  @@unique([boardId, userId])
+  @@index([boardId])
+  @@index([userId])
 }
 
 // ─── Column ─────────────────────────────────────────────────────────
