@@ -15,6 +15,7 @@ import ViewSwitcher, { ViewMode } from "../components/ViewSwitcher";
 import ListView from "../components/ListView";
 import CalendarView from "../components/CalendarView";
 import TimelineView from "../components/TimelineView";
+import ShareBoardModal from "../components/ShareBoardModal";
 import { useToast } from "../components/Toast";
 
 type DueDateFilter = "ALL" | "OVERDUE" | "TODAY" | "THIS_WEEK" | "NO_DATE";
@@ -99,6 +100,9 @@ export default function KanbanPage() {
 
   // Search
   const [searchOpen, setSearchOpen] = useState(false);
+
+  // Share modal
+  const [shareOpen, setShareOpen] = useState(false);
 
   // Global Cmd+K handler
   useEffect(() => {
@@ -407,6 +411,17 @@ export default function KanbanPage() {
             </button>
             <h1 className="text-xl font-bold text-stone-900 dark:text-white">{board.title}</h1>
             <ViewSwitcher active={viewMode} onChange={setViewMode} />
+            <button
+              onClick={() => setShareOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-brand-700 dark:text-brand-300
+                bg-brand-50 dark:bg-brand-900/30 border border-brand-200 dark:border-brand-800
+                rounded-lg hover:bg-brand-100 dark:hover:bg-brand-900/50 transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+              </svg>
+              Share
+            </button>
           </div>
           <FilterBar
             priorityFilter={priorityFilter}
@@ -483,6 +498,12 @@ export default function KanbanPage() {
       />
 
       <SearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />
+
+      <ShareBoardModal
+        open={shareOpen}
+        boardId={boardId!}
+        onClose={() => setShareOpen(false)}
+      />
     </div>
   );
 }
