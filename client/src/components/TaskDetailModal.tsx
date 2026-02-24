@@ -6,6 +6,7 @@ import { useToast } from "./Toast";
 interface TaskDetailModalProps {
   open: boolean;
   task: Task | null;
+  canEdit?: boolean;
   onClose: () => void;
   onTaskUpdated: (task: Task) => void;
 }
@@ -17,7 +18,14 @@ const priorityOptions: { value: Priority; label: string; color: string }[] = [
   { value: "URGENT", label: "Urgent", color: "bg-red-500" },
 ];
 
-export default function TaskDetailModal({ open, task, onClose, onTaskUpdated }: TaskDetailModalProps) {
+const priorityStyle: Record<Priority, string> = {
+  LOW: "bg-stone-100 text-stone-600 dark:bg-stone-700 dark:text-stone-300",
+  MEDIUM: "bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-300",
+  HIGH: "bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300",
+  URGENT: "bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-300",
+};
+
+export default function TaskDetailModal({ open, task, canEdit = true, onClose, onTaskUpdated }: TaskDetailModalProps) {
   const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState<"details" | "subtasks" | "comments">("details");
 
@@ -153,6 +161,11 @@ export default function TaskDetailModal({ open, task, onClose, onTaskUpdated }: 
     { key: "comments" as const, label: `Comments${comments.length ? ` (${comments.length})` : ""}` },
   ];
 
+  function formatDate(d: string) {
+    if (!d) return "";
+    return new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
@@ -191,61 +204,92 @@ export default function TaskDetailModal({ open, task, onClose, onTaskUpdated }: 
         <div className="flex-1 overflow-y-auto p-5">
           {activeTab === "details" && (
             <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">Title</label>
-                <input
-                  type="text"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  className="w-full px-3 py-2 border border-stone-300 dark:border-stone-700 rounded-lg text-sm bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100
-                    focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-transparent"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">Description</label>
-                <textarea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  rows={3}
-                  className="w-full px-3 py-2 border border-stone-300 dark:border-stone-700 rounded-lg text-sm bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100
-                    focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-transparent resize-none"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">Priority</label>
-                  <select
-                    value={priority}
-                    onChange={(e) => setPriority(e.target.value as Priority)}
-                    className="w-full px-3 py-2 border border-stone-300 dark:border-stone-700 rounded-lg text-sm bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100
-                      focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-transparent"
-                  >
-                    {priorityOptions.map((p) => (
-                      <option key={p.value} value={p.value}>{p.label}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">Due Date</label>
-                  <input
-                    type="date"
-                    value={dueDate}
-                    onChange={(e) => setDueDate(e.target.value)}
-                    className="w-full px-3 py-2 border border-stone-300 dark:border-stone-700 rounded-lg text-sm bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100
-                      focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-transparent"
-                  />
-                </div>
-              </div>
-              <div className="flex justify-end pt-2">
-                <button
-                  onClick={handleSave}
-                  disabled={saving || !title.trim()}
-                  className="px-4 py-2 text-sm font-medium text-white bg-brand-600 rounded-lg hover:bg-brand-700
-                    disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  {saving ? "Saving..." : "Save Changes"}
-                </button>
-              </div>
+              {canEdit ? (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">Title</label>
+                    <input
+                      type="text"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      className="w-full px-3 py-2 border border-stone-300 dark:border-stone-700 rounded-lg text-sm bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100
+                        focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">Description</label>
+                    <textarea
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      rows={3}
+                      className="w-full px-3 py-2 border border-stone-300 dark:border-stone-700 rounded-lg text-sm bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100
+                        focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-transparent resize-none"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">Priority</label>
+                      <select
+                        value={priority}
+                        onChange={(e) => setPriority(e.target.value as Priority)}
+                        className="w-full px-3 py-2 border border-stone-300 dark:border-stone-700 rounded-lg text-sm bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100
+                          focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-transparent"
+                      >
+                        {priorityOptions.map((p) => (
+                          <option key={p.value} value={p.value}>{p.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">Due Date</label>
+                      <input
+                        type="date"
+                        value={dueDate}
+                        onChange={(e) => setDueDate(e.target.value)}
+                        className="w-full px-3 py-2 border border-stone-300 dark:border-stone-700 rounded-lg text-sm bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100
+                          focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-transparent"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex justify-end pt-2">
+                    <button
+                      onClick={handleSave}
+                      disabled={saving || !title.trim()}
+                      className="px-4 py-2 text-sm font-medium text-white bg-brand-600 rounded-lg hover:bg-brand-700
+                        disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      {saving ? "Saving..." : "Save Changes"}
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div>
+                    <label className="block text-xs font-medium text-stone-500 dark:text-stone-400 uppercase tracking-wider mb-1">Title</label>
+                    <p className="text-sm font-medium text-stone-900 dark:text-stone-100">{title}</p>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-stone-500 dark:text-stone-400 uppercase tracking-wider mb-1">Description</label>
+                    <p className="text-sm text-stone-700 dark:text-stone-300 whitespace-pre-wrap">
+                      {description || <span className="text-stone-400 italic">No description</span>}
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-medium text-stone-500 dark:text-stone-400 uppercase tracking-wider mb-1">Priority</label>
+                      <span className={`inline-block text-xs font-bold uppercase px-2.5 py-1 rounded-md ${priorityStyle[priority]}`}>
+                        {priority}
+                      </span>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-stone-500 dark:text-stone-400 uppercase tracking-wider mb-1">Due Date</label>
+                      <p className="text-sm text-stone-700 dark:text-stone-300">
+                        {dueDate ? formatDate(dueDate) : <span className="text-stone-400 italic">No due date</span>}
+                      </p>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           )}
 
@@ -267,26 +311,28 @@ export default function TaskDetailModal({ open, task, onClose, onTaskUpdated }: 
                 </div>
               )}
 
-              {/* Add subtask */}
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={newSubtask}
-                  onChange={(e) => setNewSubtask(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && addSubtask()}
-                  placeholder="Add a subtask..."
-                  className="flex-1 px-3 py-2 border border-stone-300 dark:border-stone-700 rounded-lg text-sm bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100
-                    focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-transparent placeholder:text-stone-400"
-                />
-                <button
-                  onClick={addSubtask}
-                  disabled={!newSubtask.trim()}
-                  className="px-3 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700
-                    disabled:opacity-50 transition-colors"
-                >
-                  Add
-                </button>
-              </div>
+              {/* Add subtask - only for editors */}
+              {canEdit && (
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newSubtask}
+                    onChange={(e) => setNewSubtask(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && addSubtask()}
+                    placeholder="Add a subtask..."
+                    className="flex-1 px-3 py-2 border border-stone-300 dark:border-stone-700 rounded-lg text-sm bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100
+                      focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-transparent placeholder:text-stone-400"
+                  />
+                  <button
+                    onClick={addSubtask}
+                    disabled={!newSubtask.trim()}
+                    className="px-3 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700
+                      disabled:opacity-50 transition-colors"
+                  >
+                    Add
+                  </button>
+                </div>
+              )}
 
               {/* Subtask list */}
               {loadingSubtasks ? (
@@ -302,31 +348,49 @@ export default function TaskDetailModal({ open, task, onClose, onTaskUpdated }: 
                       key={subtask.id}
                       className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-stone-50 dark:hover:bg-stone-700/50 group"
                     >
-                      <button
-                        onClick={() => toggleSubtask(subtask)}
-                        className={`w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-colors ${
-                          subtask.completed
-                            ? "bg-brand-600 border-brand-600"
-                            : "border-stone-300 dark:border-stone-700 hover:border-brand-400"
-                        }`}
-                      >
-                        {subtask.completed && (
-                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                          </svg>
-                        )}
-                      </button>
+                      {canEdit ? (
+                        <button
+                          onClick={() => toggleSubtask(subtask)}
+                          className={`w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-colors ${
+                            subtask.completed
+                              ? "bg-brand-600 border-brand-600"
+                              : "border-stone-300 dark:border-stone-700 hover:border-brand-400"
+                          }`}
+                        >
+                          {subtask.completed && (
+                            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </button>
+                      ) : (
+                        <div
+                          className={`w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 ${
+                            subtask.completed
+                              ? "bg-brand-600 border-brand-600"
+                              : "border-stone-300 dark:border-stone-700"
+                          }`}
+                        >
+                          {subtask.completed && (
+                            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </div>
+                      )}
                       <span className={`text-sm flex-1 ${subtask.completed ? "line-through text-stone-400 dark:text-stone-500" : "text-stone-700 dark:text-stone-300"}`}>
                         {subtask.title}
                       </span>
-                      <button
-                        onClick={() => deleteSubtask(subtask.id)}
-                        className="p-1 text-stone-300 hover:text-red-500 rounded opacity-0 group-hover:opacity-100 transition-all"
-                      >
-                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
+                      {canEdit && (
+                        <button
+                          onClick={() => deleteSubtask(subtask.id)}
+                          className="p-1 text-stone-300 hover:text-red-500 rounded opacity-0 group-hover:opacity-100 transition-all"
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -381,14 +445,16 @@ export default function TaskDetailModal({ open, task, onClose, onTaskUpdated }: 
                               minute: "2-digit",
                             })}
                           </span>
-                          <button
-                            onClick={() => deleteComment(comment.id)}
-                            className="p-0.5 text-stone-300 hover:text-red-500 rounded opacity-0 group-hover:opacity-100 transition-all"
-                          >
-                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                          </button>
+                          {canEdit && (
+                            <button
+                              onClick={() => deleteComment(comment.id)}
+                              className="p-0.5 text-stone-300 hover:text-red-500 rounded opacity-0 group-hover:opacity-100 transition-all"
+                            >
+                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          )}
                         </div>
                       </div>
                       <p className="text-sm text-stone-600 dark:text-stone-300">{comment.content}</p>

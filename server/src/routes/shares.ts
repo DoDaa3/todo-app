@@ -9,11 +9,11 @@ router.use(authenticate);
 
 const inviteSchema = z.object({
   email: z.string().email(),
-  role: z.enum(["EDITOR", "VIEWER"]).default("VIEWER"),
+  role: z.enum(["ADMIN", "EDITOR", "VIEWER"]).default("VIEWER"),
 });
 
 const updateRoleSchema = z.object({
-  role: z.enum(["EDITOR", "VIEWER"]),
+  role: z.enum(["ADMIN", "EDITOR", "VIEWER"]),
 });
 
 // List all collaborators on a board

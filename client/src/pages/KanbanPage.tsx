@@ -146,6 +146,11 @@ export default function KanbanPage() {
     socket.on("task:created", (task: Task) => {
       setBoard((prev) => {
         if (!prev) return prev;
+        // Skip if task already exists (from optimistic update)
+        const exists = prev.columns.some((col) =>
+          col.tasks.some((t) => t.id === task.id)
+        );
+        if (exists) return prev;
         return {
           ...prev,
           columns: prev.columns.map((col) =>
@@ -385,6 +390,8 @@ export default function KanbanPage() {
 
   if (!board) return null;
 
+  const canEdit = board.userRole === "OWNER" || board.userRole === "ADMIN" || board.userRole === "EDITOR";
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-stone-50 to-stone-100 dark:from-stone-950 dark:to-stone-900 flex flex-col">
       <Navbar onSearchOpen={() => setSearchOpen(true)} />
@@ -434,12 +441,13 @@ export default function KanbanPage() {
 
       <div className="flex-1 overflow-x-auto p-4 sm:p-6">
         {viewMode === "kanban" && (
-          <DragDropContext onDragEnd={handleDragEnd}>
+          <DragDropContext onDragEnd={canEdit ? handleDragEnd : () => {}}>
             <div className="flex flex-col sm:flex-row gap-4 sm:gap-5 min-h-0">
               {filteredColumns.map((column) => (
                 <BoardColumn
                   key={column.id}
                   column={column}
+                  canEdit={canEdit}
                   onAddTask={handleAddTask}
                   onEditTask={handleEditTask}
                   onDeleteTask={handleDeleteTask}
@@ -483,6 +491,7 @@ export default function KanbanPage() {
       <TaskDetailModal
         open={detailOpen}
         task={detailTask}
+        canEdit={canEdit}
         onClose={() => setDetailOpen(false)}
         onTaskUpdated={handleTaskUpdated}
       />

@@ -29,6 +29,7 @@ enum SprintStatus {
 }
 
 enum BoardRole {
+  ADMIN
   EDITOR
   VIEWER
 }

@@ -4,7 +4,7 @@ import { useToast } from "./Toast";
 
 interface Share {
   id: string;
-  role: "EDITOR" | "VIEWER";
+  role: "ADMIN" | "EDITOR" | "VIEWER";
   user: {
     id: string;
     name: string;
@@ -28,7 +28,7 @@ interface ShareBoardModalProps {
 
 export default function ShareBoardModal({ open, boardId, onClose }: ShareBoardModalProps) {
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState<"EDITOR" | "VIEWER">("VIEWER");
+  const [role, setRole] = useState<"ADMIN" | "EDITOR" | "VIEWER">("VIEWER");
   const [shares, setShares] = useState<Share[]>([]);
   const [owner, setOwner] = useState<Owner | null>(null);
   const [loading, setLoading] = useState(false);
@@ -73,7 +73,7 @@ export default function ShareBoardModal({ open, boardId, onClose }: ShareBoardMo
     }
   }
 
-  async function handleUpdateRole(shareId: string, newRole: "EDITOR" | "VIEWER") {
+  async function handleUpdateRole(shareId: string, newRole: "ADMIN" | "EDITOR" | "VIEWER") {
     try {
       const res = await api.patch(`/boards/${boardId}/shares/${shareId}`, { role: newRole });
       setShares((prev) => prev.map((s) => (s.id === shareId ? res.data : s)));
@@ -130,13 +130,14 @@ export default function ShareBoardModal({ open, boardId, onClose }: ShareBoardMo
             />
             <select
               value={role}
-              onChange={(e) => setRole(e.target.value as "EDITOR" | "VIEWER")}
+              onChange={(e) => setRole(e.target.value as "ADMIN" | "EDITOR" | "VIEWER")}
               className="px-2 py-2 border border-stone-300 dark:border-stone-700 rounded-lg text-sm
                 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100
                 focus:outline-none focus:ring-2 focus:ring-brand-500/40 transition-colors"
             >
               <option value="VIEWER">Viewer</option>
               <option value="EDITOR">Editor</option>
+              <option value="ADMIN">Admin</option>
             </select>
           </div>
           <button
@@ -195,13 +196,14 @@ export default function ShareBoardModal({ open, boardId, onClose }: ShareBoardMo
                   <div className="flex items-center gap-2">
                     <select
                       value={share.role}
-                      onChange={(e) => handleUpdateRole(share.id, e.target.value as "EDITOR" | "VIEWER")}
+                      onChange={(e) => handleUpdateRole(share.id, e.target.value as "ADMIN" | "EDITOR" | "VIEWER")}
                       className="text-xs px-2 py-1 border border-stone-200 dark:border-stone-700 rounded-lg
                         bg-white dark:bg-stone-800 text-stone-700 dark:text-stone-300
                         focus:outline-none focus:ring-1 focus:ring-brand-500/40 transition-colors"
                     >
                       <option value="VIEWER">Viewer</option>
                       <option value="EDITOR">Editor</option>
+                      <option value="ADMIN">Admin</option>
                     </select>
                     <button
                       onClick={() => handleRemove(share.id)}

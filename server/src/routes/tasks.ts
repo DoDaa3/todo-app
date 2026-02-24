@@ -48,7 +48,7 @@ const moveTaskSchema = z.object({
   position: z.number().int().min(0),
 });
 
-// Check if user has write access to a board (owner or EDITOR)
+// Check if user has write access to a board (owner, ADMIN, or EDITOR)
 async function verifyBoardWriteAccess(boardId: string, userId: string): Promise<boolean> {
   const board = await prisma.board.findUnique({ where: { id: boardId } });
   if (!board) return false;
@@ -56,7 +56,7 @@ async function verifyBoardWriteAccess(boardId: string, userId: string): Promise<
   const share = await prisma.boardShare.findUnique({
     where: { boardId_userId: { boardId, userId } },
   });
-  return share?.role === "EDITOR";
+  return share?.role === "EDITOR" || share?.role === "ADMIN";
 }
 
 async function verifyColumnOwnership(columnId: string, userId: string) {
@@ -67,11 +67,11 @@ async function verifyColumnOwnership(columnId: string, userId: string) {
   if (!column) return null;
   // Owner has direct access
   if (column.board.userId === userId) return column;
-  // Check shared EDITOR access
+  // Check shared EDITOR or ADMIN access
   const share = await prisma.boardShare.findUnique({
     where: { boardId_userId: { boardId: column.boardId, userId } },
   });
-  if (share?.role === "EDITOR") return column;
+  if (share?.role === "EDITOR" || share?.role === "ADMIN") return column;
   return null;
 }
 

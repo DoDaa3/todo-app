@@ -44,6 +44,8 @@ export interface WorkspaceMember {
 
 // ─── Board ──────────────────────────────────────────────────────────
 
+export type BoardRole = "OWNER" | "ADMIN" | "EDITOR" | "VIEWER";
+
 export interface Board {
   id: string;
   title: string;
@@ -52,6 +54,7 @@ export interface Board {
   columns: Column[];
   labels?: Label[];
   sprints?: Sprint[];
+  userRole?: BoardRole;
   createdAt: string;
   updatedAt: string;
 }

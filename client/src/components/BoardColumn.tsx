@@ -4,6 +4,7 @@ import TaskCard from "./TaskCard";
 
 interface BoardColumnProps {
   column: Column;
+  canEdit: boolean;
   onAddTask: (columnId: string) => void;
   onEditTask: (task: Task) => void;
   onDeleteTask: (taskId: string) => void;
@@ -43,6 +44,7 @@ const defaultAccent = {
 
 export default function BoardColumn({
   column,
+  canEdit,
   onAddTask,
   onEditTask,
   onDeleteTask,
@@ -63,26 +65,28 @@ export default function BoardColumn({
             {column.tasks.length}
           </span>
         </div>
-        <button
-          onClick={() => onAddTask(column.id)}
-          className={`p-1.5 rounded-lg transition-all duration-200 hover:scale-110
-            ${accent.icon} hover:text-brand-600 dark:hover:text-brand-400 hover:bg-white dark:hover:bg-stone-800 hover:shadow-sm`}
-          title="Add task"
-        >
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+        {canEdit && (
+          <button
+            onClick={() => onAddTask(column.id)}
+            className={`p-1.5 rounded-lg transition-all duration-200 hover:scale-110
+              ${accent.icon} hover:text-brand-600 dark:hover:text-brand-400 hover:bg-white dark:hover:bg-stone-800 hover:shadow-sm`}
+            title="Add task"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 4v16m8-8H4"
-            />
-          </svg>
-        </button>
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
+          </button>
+        )}
       </div>
 
       <Droppable droppableId={column.id}>
@@ -111,6 +115,7 @@ export default function BoardColumn({
                 key={task.id}
                 task={task}
                 index={index}
+                canEdit={canEdit}
                 onEdit={onEditTask}
                 onDelete={onDeleteTask}
               />

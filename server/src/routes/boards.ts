@@ -6,7 +6,7 @@ const router = Router();
 router.use(authenticate);
 
 // Helper: check if user owns or has access to a board
-async function getBoardAccess(boardId: string, userId: string): Promise<"OWNER" | "EDITOR" | "VIEWER" | null> {
+async function getBoardAccess(boardId: string, userId: string): Promise<"OWNER" | "ADMIN" | "EDITOR" | "VIEWER" | null> {
   const board = await prisma.board.findUnique({ where: { id: boardId } });
   if (!board) return null;
   if (board.userId === userId) return "OWNER";
