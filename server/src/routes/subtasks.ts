@@ -26,30 +26,56 @@ const reorderSubtasksSchema = z.object({
   ),
 });
 
-// Helper: verify the user owns the board that contains this task
-async function verifyTaskOwnership(taskId: string, userId: string) {
+// Helper: verify the user has access to the board that contains this task (owner or any share)
+async function verifyTaskAccess(taskId: string, userId: string) {
   const task = await prisma.task.findUnique({
     where: { id: taskId },
     include: { column: { include: { board: true } } },
   });
-  if (!task || task.column.board.userId !== userId) return null;
-  return task;
+  if (!task) return null;
+  if (task.column.board.userId === userId) return task;
+  const share = await prisma.boardShare.findUnique({
+    where: { boardId_userId: { boardId: task.column.boardId, userId } },
+  });
+  if (share) return task;
+  return null;
 }
 
-// Helper: verify the user owns the board that contains this subtask's task
-async function verifySubtaskOwnership(subtaskId: string, userId: string) {
+// Helper: verify the user has write access (owner, ADMIN, or EDITOR)
+async function verifyTaskWriteAccess(taskId: string, userId: string) {
+  const task = await prisma.task.findUnique({
+    where: { id: taskId },
+    include: { column: { include: { board: true } } },
+  });
+  if (!task) return null;
+  if (task.column.board.userId === userId) return task;
+  const share = await prisma.boardShare.findUnique({
+    where: { boardId_userId: { boardId: task.column.boardId, userId } },
+  });
+  if (share?.role === "EDITOR" || share?.role === "ADMIN") return task;
+  return null;
+}
+
+// Helper: verify write access via subtask
+async function verifySubtaskWriteAccess(subtaskId: string, userId: string) {
   const subtask = await prisma.subtask.findUnique({
     where: { id: subtaskId },
     include: { task: { include: { column: { include: { board: true } } } } },
   });
-  if (!subtask || subtask.task.column.board.userId !== userId) return null;
-  return subtask;
+  if (!subtask) return null;
+  const boardId = subtask.task.column.boardId;
+  if (subtask.task.column.board.userId === userId) return subtask;
+  const share = await prisma.boardShare.findUnique({
+    where: { boardId_userId: { boardId, userId } },
+  });
+  if (share?.role === "EDITOR" || share?.role === "ADMIN") return subtask;
+  return null;
 }
 
 // List subtasks for a task (ordered by position)
 router.get("/task/:taskId", async (req: AuthRequest, res: Response) => {
   try {
-    const task = await verifyTaskOwnership(req.params.taskId, req.userId!);
+    const task = await verifyTaskAccess(req.params.taskId, req.userId!);
     if (!task) {
       return res.status(404).json({ error: "Task not found" });
     }
@@ -70,7 +96,7 @@ router.get("/task/:taskId", async (req: AuthRequest, res: Response) => {
 router.post("/", async (req: AuthRequest, res: Response) => {
   try {
     const data = createSubtaskSchema.parse(req.body);
-    const task = await verifyTaskOwnership(data.taskId, req.userId!);
+    const task = await verifyTaskWriteAccess(data.taskId, req.userId!);
     if (!task) {
       return res.status(404).json({ error: "Task not found" });
     }
@@ -104,7 +130,7 @@ router.post("/", async (req: AuthRequest, res: Response) => {
 router.patch("/:id", async (req: AuthRequest, res: Response) => {
   try {
     const data = updateSubtaskSchema.parse(req.body);
-    const subtask = await verifySubtaskOwnership(req.params.id, req.userId!);
+    const subtask = await verifySubtaskWriteAccess(req.params.id, req.userId!);
     if (!subtask) {
       return res.status(404).json({ error: "Subtask not found" });
     }
@@ -138,12 +164,9 @@ router.patch("/reorder", async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: "No subtasks provided" });
     }
 
-    // Verify ownership via the first subtask's task
-    const firstSubtask = await prisma.subtask.findUnique({
-      where: { id: data.subtasks[0].id },
-      include: { task: { include: { column: { include: { board: true } } } } },
-    });
-    if (!firstSubtask || firstSubtask.task.column.board.userId !== req.userId) {
+    // Verify write access via the first subtask's task
+    const firstSubtask = await verifySubtaskWriteAccess(data.subtasks[0].id, req.userId!);
+    if (!firstSubtask) {
       return res.status(404).json({ error: "Subtask not found" });
     }
 
@@ -180,7 +203,7 @@ router.patch("/reorder", async (req: AuthRequest, res: Response) => {
 // Delete a subtask
 router.delete("/:id", async (req: AuthRequest, res: Response) => {
   try {
-    const subtask = await verifySubtaskOwnership(req.params.id, req.userId!);
+    const subtask = await verifySubtaskWriteAccess(req.params.id, req.userId!);
     if (!subtask) {
       return res.status(404).json({ error: "Subtask not found" });
     }

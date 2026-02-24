@@ -60,11 +60,21 @@ router.post("/:boardId/shares", async (req: AuthRequest, res: Response) => {
   try {
     const data = inviteSchema.parse(req.body);
 
-    // Only the board owner can invite
-    const board = await prisma.board.findFirst({
-      where: { id: req.params.boardId, userId: req.userId },
+    // Owner or ADMIN can invite
+    const board = await prisma.board.findUnique({
+      where: { id: req.params.boardId },
     });
-    if (!board) return res.status(404).json({ error: "Board not found or not authorized" });
+    if (!board) return res.status(404).json({ error: "Board not found" });
+
+    const isOwner = board.userId === req.userId;
+    const callerShare = !isOwner
+      ? await prisma.boardShare.findUnique({
+          where: { boardId_userId: { boardId: board.id, userId: req.userId! } },
+        })
+      : null;
+    if (!isOwner && callerShare?.role !== "ADMIN") {
+      return res.status(403).json({ error: "Only the owner or admins can invite users" });
+    }
 
     // Can't invite yourself
     const inviter = await prisma.user.findUnique({ where: { id: req.userId! } });
@@ -137,11 +147,21 @@ router.patch("/:boardId/shares/:shareId", async (req: AuthRequest, res: Response
   try {
     const data = updateRoleSchema.parse(req.body);
 
-    // Only the board owner can update roles
-    const board = await prisma.board.findFirst({
-      where: { id: req.params.boardId, userId: req.userId },
+    // Owner or ADMIN can update roles
+    const board = await prisma.board.findUnique({
+      where: { id: req.params.boardId },
     });
-    if (!board) return res.status(404).json({ error: "Board not found or not authorized" });
+    if (!board) return res.status(404).json({ error: "Board not found" });
+
+    const isOwner = board.userId === req.userId;
+    const callerShare = !isOwner
+      ? await prisma.boardShare.findUnique({
+          where: { boardId_userId: { boardId: board.id, userId: req.userId! } },
+        })
+      : null;
+    if (!isOwner && callerShare?.role !== "ADMIN") {
+      return res.status(403).json({ error: "Only the owner or admins can update roles" });
+    }
 
     const share = await prisma.boardShare.findFirst({
       where: { id: req.params.shareId, boardId: board.id },
@@ -179,8 +199,17 @@ router.delete("/:boardId/shares/:shareId", async (req: AuthRequest, res: Respons
     });
     if (!share) return res.status(404).json({ error: "Share not found" });
 
-    // Owner can remove anyone, or user can remove themselves
-    if (board.userId !== req.userId && share.userId !== req.userId) {
+    // Owner or ADMIN can remove anyone, or user can remove themselves
+    const isOwner = board.userId === req.userId;
+    const isSelf = share.userId === req.userId;
+    let isAdmin = false;
+    if (!isOwner && !isSelf) {
+      const callerShare = await prisma.boardShare.findUnique({
+        where: { boardId_userId: { boardId: board.id, userId: req.userId! } },
+      });
+      isAdmin = callerShare?.role === "ADMIN";
+    }
+    if (!isOwner && !isSelf && !isAdmin) {
       return res.status(403).json({ error: "Not authorized" });
     }
 

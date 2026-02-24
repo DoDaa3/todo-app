@@ -16,14 +16,19 @@ const updateCommentSchema = z.object({
   content: z.string().min(1).max(5000),
 });
 
-// Helper: verify the user owns the board that contains this task
-async function verifyTaskOwnership(taskId: string, userId: string) {
+// Helper: verify the user has access to the board that contains this task (owner or any share)
+async function verifyTaskAccess(taskId: string, userId: string) {
   const task = await prisma.task.findUnique({
     where: { id: taskId },
     include: { column: { include: { board: true } } },
   });
-  if (!task || task.column.board.userId !== userId) return null;
-  return task;
+  if (!task) return null;
+  if (task.column.board.userId === userId) return task;
+  const share = await prisma.boardShare.findUnique({
+    where: { boardId_userId: { boardId: task.column.boardId, userId } },
+  });
+  if (share) return task;
+  return null;
 }
 
 // Helper: extract @mentions from comment content and resolve to user IDs
@@ -50,7 +55,7 @@ async function extractMentionedUsers(content: string, excludeUserId: string) {
 // List comments for a task
 router.get("/task/:taskId", async (req: AuthRequest, res: Response) => {
   try {
-    const task = await verifyTaskOwnership(req.params.taskId, req.userId!);
+    const task = await verifyTaskAccess(req.params.taskId, req.userId!);
     if (!task) {
       return res.status(404).json({ error: "Task not found" });
     }
@@ -72,11 +77,11 @@ router.get("/task/:taskId", async (req: AuthRequest, res: Response) => {
   }
 });
 
-// Create a comment
+// Create a comment (any board member can comment)
 router.post("/", async (req: AuthRequest, res: Response) => {
   try {
     const data = createCommentSchema.parse(req.body);
-    const task = await verifyTaskOwnership(data.taskId, req.userId!);
+    const task = await verifyTaskAccess(data.taskId, req.userId!);
     if (!task) {
       return res.status(404).json({ error: "Task not found" });
     }
