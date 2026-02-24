@@ -140,7 +140,10 @@ export default function KanbanPage() {
     socket.emit("join-board", boardId);
 
     socket.on("board:updated", (updatedBoard: Board) => {
-      setBoard(updatedBoard);
+      setBoard((prev) => ({
+        ...updatedBoard,
+        userRole: updatedBoard.userRole ?? prev?.userRole,
+      }));
     });
 
     socket.on("task:created", (task: Task) => {
