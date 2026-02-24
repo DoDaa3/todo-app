@@ -65,6 +65,7 @@ export default function ShareBoardModal({
   const [inviting, setInviting] = useState(false);
   const [leaveConfirm, setLeaveConfirm] = useState(false);
   const [leaving, setLeaving] = useState(false);
+  const [removeConfirm, setRemoveConfirm] = useState<{ shareId: string; userName: string } | null>(null);
   const { showToast } = useToast();
 
   const isOwner = userRole === "OWNER";
@@ -77,6 +78,7 @@ export default function ShareBoardModal({
       setEmail("");
       setRole("VIEWER");
       setLeaveConfirm(false);
+      setRemoveConfirm(null);
     }
   }, [open, boardId]);
 
@@ -114,8 +116,8 @@ export default function ShareBoardModal({
       const res = await api.patch(`/boards/${boardId}/shares/${shareId}`, { role: newRole });
       setShares((prev) => prev.map((s) => (s.id === shareId ? res.data : s)));
       showToast("Role updated", "success");
-    } catch {
-      showToast("Failed to update role", "error");
+    } catch (err: any) {
+      showToast(err.response?.data?.error || "Failed to update role", "error");
     }
   }
 
@@ -285,7 +287,7 @@ export default function ShareBoardModal({
                                   {isOwner && <option value="ADMIN">Admin</option>}
                                 </select>
                                 <button
-                                  onClick={() => handleRemove(share.id)}
+                                  onClick={() => setRemoveConfirm({ shareId: share.id, userName: share.user.name })}
                                   className="p-1.5 text-stone-300 dark:text-stone-600 hover:text-red-500 dark:hover:text-red-400
                                     hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                                   title="Remove collaborator"
@@ -387,6 +389,47 @@ export default function ShareBoardModal({
           </div>
         )}
       </div>
+
+      {/* Remove collaborator confirmation popup */}
+      {removeConfirm && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setRemoveConfirm(null)} />
+          <div className="relative bg-white dark:bg-stone-900 rounded-2xl shadow-2xl w-full max-w-sm p-6 animate-in fade-in zoom-in-95">
+            <div className="flex flex-col items-center text-center">
+              <div className="w-14 h-14 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mb-4">
+                <svg className="w-7 h-7 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M13 7a4 4 0 11-8 0 4 4 0 018 0zM9 14a6 6 0 00-6 6v1h12v-1a6 6 0 00-6-6zM21 12h-6" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-stone-900 dark:text-stone-100 mb-1">Remove collaborator?</h3>
+              <p className="text-sm text-stone-500 dark:text-stone-400 mb-6">
+                <span className="font-medium text-stone-700 dark:text-stone-300">{removeConfirm.userName}</span> will
+                lose access to this board immediately.
+              </p>
+              <div className="flex gap-3 w-full">
+                <button
+                  onClick={() => setRemoveConfirm(null)}
+                  className="flex-1 px-4 py-2.5 text-sm font-medium text-stone-700 dark:text-stone-300 bg-stone-100 dark:bg-stone-800
+                    rounded-xl hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors focus:outline-none focus:ring-2 focus:ring-stone-400"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    handleRemove(removeConfirm.shareId);
+                    setRemoveConfirm(null);
+                  }}
+                  className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-red-600 hover:bg-red-700
+                    rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                >
+                  Remove
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
