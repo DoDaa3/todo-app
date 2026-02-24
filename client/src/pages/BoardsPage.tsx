@@ -9,6 +9,7 @@ import { useToast } from "../components/Toast";
 
 export default function BoardsPage() {
   const [boards, setBoards] = useState<BoardSummary[]>([]);
+  const [sharedBoards, setSharedBoards] = useState<(BoardSummary & { sharedRole?: string; ownerName?: string })[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [newTitle, setNewTitle] = useState("");
@@ -35,7 +36,16 @@ export default function BoardsPage() {
   const fetchBoards = useCallback(async () => {
     try {
       const res = await api.get("/boards");
-      setBoards(res.data);
+      const data = res.data;
+      // Backend returns { owned: [...], shared: [...] }
+      if (data.owned) {
+        setBoards(data.owned);
+        setSharedBoards(data.shared || []);
+      } else {
+        // Fallback for backward compatibility
+        setBoards(Array.isArray(data) ? data : []);
+        setSharedBoards([]);
+      }
     } catch {
       showToast("Failed to fetch boards", "error");
     } finally {
@@ -152,7 +162,7 @@ export default function BoardsPage() {
           <div className="flex items-center justify-center py-20">
             <div className="w-8 h-8 border-4 border-brand-200 dark:border-brand-800 border-t-brand-600 dark:border-t-brand-400 rounded-full animate-spin" />
           </div>
-        ) : boards.length === 0 ? (
+        ) : boards.length === 0 && sharedBoards.length === 0 ? (
           <div className="text-center py-20">
             <div className="w-16 h-16 bg-stone-100 dark:bg-stone-800 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <svg
@@ -174,69 +184,130 @@ export default function BoardsPage() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {boards.map((board, i) => (
-              <div
-                key={board.id}
-                className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200/80 dark:border-stone-800 overflow-hidden hover:shadow-lg
-                  transition-all duration-200 cursor-pointer group hover:border-stone-300 dark:hover:border-stone-700"
-                onClick={() => navigate(`/board/${board.id}`)}
-              >
-                <div className={`h-2 bg-gradient-to-r ${boardColors[i % boardColors.length]}`} />
-                <div className="p-5">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h3 className="font-semibold text-stone-900 dark:text-stone-100 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
-                        {board.title}
-                      </h3>
-                      <p className="text-xs text-stone-400 dark:text-stone-500 mt-1">
-                        {board._count.columns} columns
-                      </p>
+          <>
+            {boards.length > 0 && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {boards.map((board, i) => (
+                  <div
+                    key={board.id}
+                    className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200/80 dark:border-stone-800 overflow-hidden hover:shadow-lg
+                      transition-all duration-200 cursor-pointer group hover:border-stone-300 dark:hover:border-stone-700"
+                    onClick={() => navigate(`/board/${board.id}`)}
+                  >
+                    <div className={`h-2 bg-gradient-to-r ${boardColors[i % boardColors.length]}`} />
+                    <div className="p-5">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <h3 className="font-semibold text-stone-900 dark:text-stone-100 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
+                            {board.title}
+                          </h3>
+                          <p className="text-xs text-stone-400 dark:text-stone-500 mt-1">
+                            {board._count.columns} columns
+                          </p>
+                        </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDeleteConfirm({ open: true, boardId: board.id });
+                          }}
+                          className="p-1.5 text-stone-300 dark:text-stone-600 hover:text-red-500 dark:hover:text-red-400 rounded-lg transition-colors
+                            opacity-0 group-hover:opacity-100"
+                          title="Delete board"
+                        >
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                      <div className="mt-4 flex items-center text-xs text-stone-400 dark:text-stone-500">
+                        <svg
+                          className="w-3.5 h-3.5 mr-1"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
+                        </svg>
+                        {new Date(board.createdAt).toLocaleDateString()}
+                      </div>
                     </div>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setDeleteConfirm({ open: true, boardId: board.id });
-                      }}
-                      className="p-1.5 text-stone-300 dark:text-stone-600 hover:text-red-500 dark:hover:text-red-400 rounded-lg transition-colors
-                        opacity-0 group-hover:opacity-100"
-                      title="Delete board"
-                    >
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                        />
-                      </svg>
-                    </button>
                   </div>
-                  <div className="mt-4 flex items-center text-xs text-stone-400 dark:text-stone-500">
-                    <svg
-                      className="w-3.5 h-3.5 mr-1"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                    {new Date(board.createdAt).toLocaleDateString()}
-                  </div>
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
+            )}
+
+            {sharedBoards.length > 0 && (
+              <>
+                <div className="mt-10 mb-4">
+                  <h2 className="text-lg font-semibold text-stone-900 dark:text-white">Shared with me</h2>
+                  <p className="text-sm text-stone-500 dark:text-stone-400 mt-1">Boards others have shared with you</p>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {sharedBoards.map((board, i) => (
+                    <div
+                      key={board.id}
+                      className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200/80 dark:border-stone-800 overflow-hidden hover:shadow-lg
+                        transition-all duration-200 cursor-pointer group hover:border-stone-300 dark:hover:border-stone-700"
+                      onClick={() => navigate(`/board/${board.id}`)}
+                    >
+                      <div className={`h-2 bg-gradient-to-r ${boardColors[(i + 3) % boardColors.length]}`} />
+                      <div className="p-5">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <h3 className="font-semibold text-stone-900 dark:text-stone-100 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
+                              {board.title}
+                            </h3>
+                            <p className="text-xs text-stone-400 dark:text-stone-500 mt-1">
+                              {board._count.columns} columns
+                              {board.ownerName && <> &middot; by {board.ownerName}</>}
+                            </p>
+                          </div>
+                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                            board.sharedRole === "EDITOR"
+                              ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+                              : "bg-stone-100 text-stone-600 dark:bg-stone-800 dark:text-stone-400"
+                          }`}>
+                            {board.sharedRole === "EDITOR" ? "Editor" : "Viewer"}
+                          </span>
+                        </div>
+                        <div className="mt-4 flex items-center text-xs text-stone-400 dark:text-stone-500">
+                          <svg
+                            className="w-3.5 h-3.5 mr-1"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                          </svg>
+                          {new Date(board.createdAt).toLocaleDateString()}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </>
         )}
       </div>
 
