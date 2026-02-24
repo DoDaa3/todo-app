@@ -18,12 +18,19 @@ const columnAccents: Record<string, { border: string; bg: string; text: string; 
     badge: "bg-stone-200 text-stone-600 dark:bg-stone-700 dark:text-stone-300",
     icon: "text-stone-400",
   },
-  Doing: {
+  "In Progress": {
     border: "border-t-amber-500 dark:border-t-amber-400",
     bg: "bg-amber-50/60 dark:bg-amber-900/10",
     text: "text-amber-700 dark:text-amber-400",
     badge: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
     icon: "text-amber-400",
+  },
+  "In Review": {
+    border: "border-t-blue-500 dark:border-t-blue-400",
+    bg: "bg-blue-50/60 dark:bg-blue-900/10",
+    text: "text-blue-700 dark:text-blue-400",
+    badge: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+    icon: "text-blue-400",
   },
   Done: {
     border: "border-t-emerald-500 dark:border-t-emerald-400",

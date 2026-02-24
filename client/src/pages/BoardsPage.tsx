@@ -278,11 +278,13 @@ export default function BoardsPage() {
                             </p>
                           </div>
                           <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                            board.sharedRole === "EDITOR"
+                            board.sharedRole === "ADMIN"
+                              ? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400"
+                              : board.sharedRole === "EDITOR"
                               ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
                               : "bg-stone-100 text-stone-600 dark:bg-stone-800 dark:text-stone-400"
                           }`}>
-                            {board.sharedRole === "EDITOR" ? "Editor" : "Viewer"}
+                            {board.sharedRole === "ADMIN" ? "Admin" : board.sharedRole === "EDITOR" ? "Editor" : "Viewer"}
                           </span>
                         </div>
                         <div className="mt-4 flex items-center text-xs text-stone-400 dark:text-stone-500">

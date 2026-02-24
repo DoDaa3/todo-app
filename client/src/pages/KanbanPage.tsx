@@ -328,6 +328,7 @@ export default function KanbanPage() {
     description: string;
     priority: Priority;
     dueDate: string | null;
+    subtasks: string[];
   }) {
     try {
       if (editingTask?.id) {
@@ -345,11 +346,20 @@ export default function KanbanPage() {
         });
         showToast("Task updated", "success");
       } else {
-        await api.post("/tasks", {
-          ...data,
+        const res = await api.post("/tasks", {
+          title: data.title,
+          description: data.description,
+          priority: data.priority,
+          dueDate: data.dueDate,
           columnId: activeColumnId,
         });
-        // Task will appear via socket "task:created" event — no optimistic add
+        const newTask = res.data;
+        // Create subtasks sequentially after task is created
+        if (data.subtasks.length > 0) {
+          for (const subtaskTitle of data.subtasks) {
+            await api.post("/subtasks", { title: subtaskTitle, taskId: newTask.id });
+          }
+        }
         showToast("Task created", "success");
       }
       setModalOpen(false);

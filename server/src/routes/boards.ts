@@ -77,8 +77,9 @@ router.post("/", async (req: AuthRequest, res: Response) => {
         columns: {
           create: [
             { title: "To Do", position: 0 },
-            { title: "Doing", position: 1 },
-            { title: "Done", position: 2 },
+            { title: "In Progress", position: 1 },
+            { title: "In Review", position: 2 },
+            { title: "Done", position: 3 },
           ],
         },
       },
