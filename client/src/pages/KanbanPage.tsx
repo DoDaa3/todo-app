@@ -17,6 +17,7 @@ import CalendarView from "../components/CalendarView";
 import TimelineView from "../components/TimelineView";
 import ShareBoardModal from "../components/ShareBoardModal";
 import { useToast } from "../components/Toast";
+import { useAuth } from "../hooks/useAuth";
 
 type DueDateFilter = "ALL" | "OVERDUE" | "TODAY" | "THIS_WEEK" | "NO_DATE";
 
@@ -71,6 +72,7 @@ export default function KanbanPage() {
   const { boardId } = useParams<{ boardId: string }>();
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const { user } = useAuth();
   const [board, setBoard] = useState<Board | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -505,7 +507,10 @@ export default function KanbanPage() {
       <ShareBoardModal
         open={shareOpen}
         boardId={boardId!}
+        currentUserId={user?.id}
+        userRole={board.userRole}
         onClose={() => setShareOpen(false)}
+        onLeave={() => navigate("/")}
       />
     </div>
   );
