@@ -228,14 +228,24 @@ router.patch("/:id", async (req: AuthRequest, res: Response) => {
   }
 });
 
-// Delete a board
+// Delete a board (owner or ADMIN)
 router.delete("/:id", async (req: AuthRequest, res: Response) => {
   try {
-    const board = await prisma.board.findFirst({
-      where: { id: req.params.id, userId: req.userId },
+    const board = await prisma.board.findUnique({
+      where: { id: req.params.id },
     });
     if (!board) {
       return res.status(404).json({ error: "Board not found" });
+    }
+
+    const isOwner = board.userId === req.userId;
+    if (!isOwner) {
+      const share = await prisma.boardShare.findUnique({
+        where: { boardId_userId: { boardId: board.id, userId: req.userId! } },
+      });
+      if (share?.role !== "ADMIN") {
+        return res.status(403).json({ error: "Only the owner or admins can delete this board" });
+      }
     }
 
     await prisma.board.delete({ where: { id: req.params.id } });

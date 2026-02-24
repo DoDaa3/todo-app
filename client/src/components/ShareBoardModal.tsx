@@ -67,7 +67,9 @@ export default function ShareBoardModal({
   const [leaving, setLeaving] = useState(false);
   const { showToast } = useToast();
 
-  const isManager = userRole === "OWNER" || userRole === "ADMIN";
+  const isOwner = userRole === "OWNER";
+  const isAdmin = userRole === "ADMIN";
+  const isManager = isOwner || isAdmin;
 
   useEffect(() => {
     if (open) {
@@ -194,7 +196,7 @@ export default function ShareBoardModal({
               >
                 <option value="VIEWER">Viewer</option>
                 <option value="EDITOR">Editor</option>
-                <option value="ADMIN">Admin</option>
+                {isOwner && <option value="ADMIN">Admin</option>}
               </select>
             </div>
             <button
@@ -264,52 +266,64 @@ export default function ShareBoardModal({
                       </div>
 
                       <div className="flex items-center gap-2 shrink-0 ml-3">
-                        {isManager && !isMe ? (
-                          /* Manager sees dropdown + remove button for others */
-                          <>
-                            <select
-                              value={share.role}
-                              onChange={(e) => handleUpdateRole(share.id, e.target.value as "ADMIN" | "EDITOR" | "VIEWER")}
-                              className="text-xs px-2 py-1 border border-stone-200 dark:border-stone-700 rounded-lg
-                                bg-white dark:bg-stone-800 text-stone-700 dark:text-stone-300
-                                focus:outline-none focus:ring-1 focus:ring-brand-500/40 transition-colors cursor-pointer"
-                            >
-                              <option value="VIEWER">Viewer</option>
-                              <option value="EDITOR">Editor</option>
-                              <option value="ADMIN">Admin</option>
-                            </select>
-                            <button
-                              onClick={() => handleRemove(share.id)}
-                              className="p-1.5 text-stone-300 dark:text-stone-600 hover:text-red-500 dark:hover:text-red-400
-                                hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                              title="Remove collaborator"
-                            >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                              </svg>
-                            </button>
-                          </>
-                        ) : isMe && !isManager ? (
-                          /* Non-manager sees their own role badge + Leave button */
-                          <>
+                        {(() => {
+                          // Can this manager control this user?
+                          const canControl = isManager && !isMe && (isOwner || share.role !== "ADMIN");
+
+                          if (canControl) {
+                            return (
+                              <>
+                                <select
+                                  value={share.role}
+                                  onChange={(e) => handleUpdateRole(share.id, e.target.value as "ADMIN" | "EDITOR" | "VIEWER")}
+                                  className="text-xs px-2 py-1 border border-stone-200 dark:border-stone-700 rounded-lg
+                                    bg-white dark:bg-stone-800 text-stone-700 dark:text-stone-300
+                                    focus:outline-none focus:ring-1 focus:ring-brand-500/40 transition-colors cursor-pointer"
+                                >
+                                  <option value="VIEWER">Viewer</option>
+                                  <option value="EDITOR">Editor</option>
+                                  {isOwner && <option value="ADMIN">Admin</option>}
+                                </select>
+                                <button
+                                  onClick={() => handleRemove(share.id)}
+                                  className="p-1.5 text-stone-300 dark:text-stone-600 hover:text-red-500 dark:hover:text-red-400
+                                    hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                                  title="Remove collaborator"
+                                >
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                  </svg>
+                                </button>
+                              </>
+                            );
+                          }
+
+                          if (isMe && userRole !== "OWNER") {
+                            // Any non-owner sees their own badge + Leave
+                            return (
+                              <>
+                                <span className={`text-xs px-2.5 py-1 rounded-full font-semibold ${roleBadge[share.role]}`}>
+                                  {share.role.charAt(0) + share.role.slice(1).toLowerCase()}
+                                </span>
+                                <button
+                                  onClick={() => setLeaveConfirm(true)}
+                                  className="text-xs px-2.5 py-1.5 text-red-600 dark:text-red-400 font-medium
+                                    border border-red-200 dark:border-red-800 rounded-lg
+                                    hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                                >
+                                  Leave
+                                </button>
+                              </>
+                            );
+                          }
+
+                          // Static badge (owner's own row, or admin looking at another admin)
+                          return (
                             <span className={`text-xs px-2.5 py-1 rounded-full font-semibold ${roleBadge[share.role]}`}>
                               {share.role.charAt(0) + share.role.slice(1).toLowerCase()}
                             </span>
-                            <button
-                              onClick={() => setLeaveConfirm(true)}
-                              className="text-xs px-2.5 py-1.5 text-red-600 dark:text-red-400 font-medium
-                                border border-red-200 dark:border-red-800 rounded-lg
-                                hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                            >
-                              Leave
-                            </button>
-                          </>
-                        ) : (
-                          /* Manager looking at their own row — just a badge */
-                          <span className={`text-xs px-2.5 py-1 rounded-full font-semibold ${roleBadge[share.role]}`}>
-                            {share.role.charAt(0) + share.role.slice(1).toLowerCase()}
-                          </span>
-                        )}
+                          );
+                        })()}
                       </div>
                     </div>
 

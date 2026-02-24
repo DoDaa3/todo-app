@@ -76,6 +76,11 @@ router.post("/:boardId/shares", async (req: AuthRequest, res: Response) => {
       return res.status(403).json({ error: "Only the owner or admins can invite users" });
     }
 
+    // Only owner can invite as ADMIN
+    if (!isOwner && data.role === "ADMIN") {
+      return res.status(403).json({ error: "Only the board owner can grant admin access" });
+    }
+
     // Can't invite yourself
     const inviter = await prisma.user.findUnique({ where: { id: req.userId! } });
     if (data.email === inviter?.email) {
@@ -168,6 +173,16 @@ router.patch("/:boardId/shares/:shareId", async (req: AuthRequest, res: Response
     });
     if (!share) return res.status(404).json({ error: "Share not found" });
 
+    // Admins can only change roles of EDITOR/VIEWER, not other ADMINs
+    if (!isOwner && share.role === "ADMIN") {
+      return res.status(403).json({ error: "Only the board owner can change an admin's role" });
+    }
+
+    // Only owner can promote to ADMIN
+    if (!isOwner && data.role === "ADMIN") {
+      return res.status(403).json({ error: "Only the board owner can grant admin access" });
+    }
+
     const updated = await prisma.boardShare.update({
       where: { id: share.id },
       data: { role: data.role },
@@ -199,18 +214,20 @@ router.delete("/:boardId/shares/:shareId", async (req: AuthRequest, res: Respons
     });
     if (!share) return res.status(404).json({ error: "Share not found" });
 
-    // Owner or ADMIN can remove anyone, or user can remove themselves
+    // Owner can remove anyone; Admin can remove EDITOR/VIEWER but not other ADMINs; user can remove themselves
     const isOwner = board.userId === req.userId;
     const isSelf = share.userId === req.userId;
-    let isAdmin = false;
     if (!isOwner && !isSelf) {
       const callerShare = await prisma.boardShare.findUnique({
         where: { boardId_userId: { boardId: board.id, userId: req.userId! } },
       });
-      isAdmin = callerShare?.role === "ADMIN";
-    }
-    if (!isOwner && !isSelf && !isAdmin) {
-      return res.status(403).json({ error: "Not authorized" });
+      if (callerShare?.role !== "ADMIN") {
+        return res.status(403).json({ error: "Not authorized" });
+      }
+      // Admin trying to remove another Admin — blocked
+      if (share.role === "ADMIN") {
+        return res.status(403).json({ error: "Only the board owner can remove an admin" });
+      }
     }
 
     await prisma.boardShare.delete({ where: { id: share.id } });
