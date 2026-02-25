@@ -48,7 +48,7 @@ router.post("/signup", async (req: Request, res: Response) => {
       },
     });
 
-    // Create a default board with 3 columns for new users
+    // Create a default board with 4 columns for new users
     await prisma.board.create({
       data: {
         title: "My First Board",
@@ -56,8 +56,9 @@ router.post("/signup", async (req: Request, res: Response) => {
         columns: {
           create: [
             { title: "To Do", position: 0 },
-            { title: "Doing", position: 1 },
-            { title: "Done", position: 2 },
+            { title: "In Progress", position: 1 },
+            { title: "In Review", position: 2 },
+            { title: "Done", position: 3 },
           ],
         },
       },

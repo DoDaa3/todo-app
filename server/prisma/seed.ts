@@ -45,7 +45,7 @@ async function main() {
             },
           },
           {
-            title: "Doing",
+            title: "In Progress",
             position: 1,
             tasks: {
               create: [
@@ -59,8 +59,12 @@ async function main() {
             },
           },
           {
-            title: "Done",
+            title: "In Review",
             position: 2,
+          },
+          {
+            title: "Done",
+            position: 3,
             tasks: {
               create: [
                 {
