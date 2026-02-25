@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { DragDropContext, DropResult } from "@hello-pangea/dnd";
 import api from "../lib/api";
-import { connectSocket, disconnectSocket } from "../lib/socket";
+import { connectSocket } from "../lib/socket";
 import { Board, Task, Column, Priority } from "../types";
 import Navbar from "../components/Navbar";
 import BoardColumn from "../components/BoardColumn";
@@ -214,6 +214,14 @@ export default function KanbanPage() {
       });
     });
 
+    // If access is revoked (kicked from board), redirect to boards list
+    socket.on("board:access-revoked", (data: { boardId: string }) => {
+      if (data.boardId === boardId) {
+        showToast("You have been removed from this board", "error");
+        navigate("/");
+      }
+    });
+
     return () => {
       socket.emit("leave-board", boardId);
       socket.off("board:updated");
@@ -222,9 +230,9 @@ export default function KanbanPage() {
       socket.off("task:deleted");
       socket.off("column:created");
       socket.off("column:deleted");
-      disconnectSocket();
+      socket.off("board:access-revoked");
     };
-  }, [boardId]);
+  }, [boardId, navigate, showToast]);
 
   // Filtered columns with filtered tasks
   const filteredColumns = useMemo(() => {

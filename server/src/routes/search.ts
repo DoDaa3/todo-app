@@ -21,15 +21,27 @@ router.get("/", async (req: AuthRequest, res: Response) => {
     const query = parsed.data.q.trim();
     const userId = req.userId!;
 
-    // Search tasks the user has access to (on boards they own)
+    // Get IDs of boards the user has access to (owned + shared)
+    const sharedBoardIds = (
+      await prisma.boardShare.findMany({
+        where: { userId },
+        select: { boardId: true },
+      })
+    ).map((s) => s.boardId);
+
+    const boardAccessFilter = {
+      OR: [{ userId }, { id: { in: sharedBoardIds } }],
+    };
+
+    // Search tasks the user has access to (owned + shared boards)
     const tasks = await prisma.task.findMany({
       where: {
         column: {
-          board: { userId },
+          board: boardAccessFilter,
         },
         OR: [
-          { title: { contains: query, mode: "insensitive" } },
-          { description: { contains: query, mode: "insensitive" } },
+          { title: { contains: query, mode: "insensitive" as const } },
+          { description: { contains: query, mode: "insensitive" as const } },
         ],
       },
       take: 10,
@@ -43,10 +55,10 @@ router.get("/", async (req: AuthRequest, res: Response) => {
       },
     });
 
-    // Search boards the user owns
+    // Search boards the user has access to (owned + shared)
     const boards = await prisma.board.findMany({
       where: {
-        userId,
+        ...boardAccessFilter,
         title: { contains: query, mode: "insensitive" },
       },
       take: 10,
@@ -62,49 +74,29 @@ router.get("/", async (req: AuthRequest, res: Response) => {
         content: { contains: query, mode: "insensitive" },
         task: {
           column: {
-            board: { userId },
+            board: boardAccessFilter,
           },
         },
       },
       take: 10,
       orderBy: { createdAt: "desc" },
       include: {
-        task: { select: { id: true, title: true } },
+        task: {
+          select: {
+            id: true,
+            title: true,
+            column: {
+              select: {
+                board: { select: { id: true, title: true } },
+              },
+            },
+          },
+        },
         user: { select: { id: true, name: true } },
       },
     });
 
-    // Format the results with relevant context
-    const results = {
-      tasks: tasks.map((task) => ({
-        id: task.id,
-        title: task.title,
-        description: task.description,
-        priority: task.priority,
-        boardId: task.column.board.id,
-        boardTitle: task.column.board.title,
-        columnId: task.column.id,
-        updatedAt: task.updatedAt,
-      })),
-      boards: boards.map((board) => ({
-        id: board.id,
-        title: board.title,
-        columnCount: board._count.columns,
-        createdAt: board.createdAt,
-        updatedAt: board.updatedAt,
-      })),
-      comments: comments.map((comment) => ({
-        id: comment.id,
-        content: comment.content,
-        taskId: comment.task.id,
-        taskTitle: comment.task.title,
-        authorId: comment.user.id,
-        authorName: comment.user.name,
-        createdAt: comment.createdAt,
-      })),
-    };
-
-    res.json(results);
+    res.json({ tasks, boards, comments });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Internal server error" });

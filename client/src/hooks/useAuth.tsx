@@ -8,6 +8,7 @@ import {
 } from "react";
 import api from "../lib/api";
 import { User } from "../types";
+import { connectSocket, disconnectSocket } from "../lib/socket";
 
 interface AuthContextType {
   user: User | null;
@@ -30,6 +31,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.getItem("token")
   );
   const [loading, setLoading] = useState(true);
+
+  // Connect socket and join user room when user is authenticated
+  useEffect(() => {
+    if (user) {
+      const socket = connectSocket();
+      socket.emit("join-user", user.id);
+    }
+    return () => {
+      // Cleanup on user change (not on unmount of entire app)
+    };
+  }, [user]);
 
   useEffect(() => {
     if (token) {
@@ -71,6 +83,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const logout = useCallback(() => {
+    disconnectSocket();
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     setToken(null);

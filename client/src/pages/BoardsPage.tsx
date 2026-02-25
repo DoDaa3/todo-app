@@ -6,6 +6,7 @@ import Navbar from "../components/Navbar";
 import SearchModal from "../components/SearchModal";
 import ConfirmModal from "../components/ConfirmModal";
 import { useToast } from "../components/Toast";
+import { getSocket } from "../lib/socket";
 
 export default function BoardsPage() {
   const [boards, setBoards] = useState<BoardSummary[]>([]);
@@ -55,6 +56,17 @@ export default function BoardsPage() {
 
   useEffect(() => {
     fetchBoards();
+  }, [fetchBoards]);
+
+  // Real-time: refresh boards when membership changes via socket
+  useEffect(() => {
+    const socket = getSocket();
+    if (!socket) return;
+
+    socket.on("boards:updated", fetchBoards);
+    return () => {
+      socket.off("boards:updated", fetchBoards);
+    };
   }, [fetchBoards]);
 
   async function handleCreate(e: React.FormEvent) {

@@ -108,7 +108,7 @@ export default function SearchModal({ open, onClose }: SearchModalProps) {
 
           {!loading && noResults && (
             <div className="text-center py-8">
-              <p className="text-sm text-stone-400 dark:text-stone-500">No results for "{query}"</p>
+              <p className="text-sm text-stone-400 dark:text-stone-500">No results for &ldquo;{query}&rdquo;</p>
             </div>
           )}
 
@@ -134,7 +134,7 @@ export default function SearchModal({ open, onClose }: SearchModalProps) {
                       </div>
                       <div>
                         <div className="text-sm font-medium text-stone-900 dark:text-stone-100">{board.title}</div>
-                        <div className="text-xs text-stone-400">{board._count.columns} columns</div>
+                        <div className="text-xs text-stone-400">{board._count?.columns ?? 0} columns</div>
                       </div>
                     </button>
                   ))}
@@ -158,13 +158,23 @@ export default function SearchModal({ open, onClose }: SearchModalProps) {
                     >
                       <div className="w-8 h-8 rounded-lg bg-stone-100 dark:bg-stone-800 flex items-center justify-center shrink-0">
                         <svg className="w-4 h-4 text-stone-500 dark:text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                         </svg>
                       </div>
-                      <div className="min-w-0">
+                      <div className="min-w-0 flex-1">
                         <div className="text-sm font-medium text-stone-900 dark:text-stone-100 truncate">{task.title}</div>
-                        <div className="text-xs text-stone-400 truncate">
-                          {task.column?.board?.title || ""}
+                        <div className="text-xs text-stone-400 truncate flex items-center gap-2">
+                          <span>{task.column?.board?.title || ""}</span>
+                          {task.priority && (
+                            <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                              task.priority === "URGENT" ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" :
+                              task.priority === "HIGH" ? "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400" :
+                              task.priority === "MEDIUM" ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" :
+                              "bg-stone-100 text-stone-600 dark:bg-stone-800 dark:text-stone-400"
+                            }`}>
+                              {task.priority}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </button>
@@ -179,15 +189,22 @@ export default function SearchModal({ open, onClose }: SearchModalProps) {
                     Comments
                   </div>
                   {results!.comments.map((comment) => (
-                    <div
+                    <button
                       key={comment.id}
-                      className="px-4 py-2.5 hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors"
+                      onClick={() => {
+                        const boardId = comment.task?.column?.board?.id;
+                        if (boardId) goToBoard(boardId);
+                      }}
+                      className="w-full text-left px-4 py-2.5 hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors"
                     >
                       <div className="text-sm text-stone-700 dark:text-stone-300 line-clamp-1">{comment.content}</div>
-                      <div className="text-xs text-stone-400 mt-0.5">
-                        on task: {comment.task?.title || "Unknown"}
+                      <div className="text-xs text-stone-400 mt-0.5 flex items-center gap-2">
+                        <span>on task: {comment.task?.title || "Unknown"}</span>
+                        {comment.user?.name && (
+                          <span className="text-stone-300 dark:text-stone-600">by {comment.user.name}</span>
+                        )}
                       </div>
-                    </div>
+                    </button>
                   ))}
                 </div>
               )}

@@ -3,6 +3,7 @@ import { z } from "zod";
 import prisma from "../lib/prisma";
 import { authenticate, AuthRequest } from "../middleware/auth";
 import { sendBoardInviteEmail } from "../lib/email";
+import { getIO } from "../lib/socket";
 
 const router = Router();
 router.use(authenticate);
@@ -15,6 +16,21 @@ const inviteSchema = z.object({
 const updateRoleSchema = z.object({
   role: z.enum(["ADMIN", "EDITOR", "VIEWER"]),
 });
+
+// Helper: create notification and push via socket
+async function createAndEmitNotification(data: {
+  type: "BOARD_SHARED" | "ROLE_CHANGED" | "BOARD_REMOVED";
+  content: string;
+  userId: string;
+  relatedBoardId: string;
+}) {
+  const notification = await prisma.notification.create({ data });
+  const io = getIO();
+  if (io) {
+    io.to(`user:${data.userId}`).emit("notification:new", notification);
+  }
+  return notification;
+}
 
 // List all collaborators on a board
 router.get("/:boardId/shares", async (req: AuthRequest, res: Response) => {
@@ -119,15 +135,19 @@ router.post("/:boardId/shares", async (req: AuthRequest, res: Response) => {
       },
     });
 
-    // Create notification for the invited user
-    await prisma.notification.create({
-      data: {
-        type: "BOARD_SHARED",
-        content: `${inviter?.name} shared the board "${board.title}" with you as ${data.role.toLowerCase()}`,
-        userId: invitedUser.id,
-        relatedBoardId: board.id,
-      },
+    // Create notification + real-time push
+    await createAndEmitNotification({
+      type: "BOARD_SHARED",
+      content: `${inviter?.name} shared the board "${board.title}" with you as ${data.role.toLowerCase()}`,
+      userId: invitedUser.id,
+      relatedBoardId: board.id,
     });
+
+    // Emit boards-updated so the invited user's board list refreshes in real-time
+    const io = getIO();
+    if (io) {
+      io.to(`user:${invitedUser.id}`).emit("boards:updated");
+    }
 
     // Send email notification (fire-and-forget)
     sendBoardInviteEmail(
@@ -183,6 +203,7 @@ router.patch("/:boardId/shares/:shareId", async (req: AuthRequest, res: Response
       return res.status(403).json({ error: "Only the board owner can grant admin access" });
     }
 
+    const oldRole = share.role;
     const updated = await prisma.boardShare.update({
       where: { id: share.id },
       data: { role: data.role },
@@ -190,6 +211,23 @@ router.patch("/:boardId/shares/:shareId", async (req: AuthRequest, res: Response
         user: { select: { id: true, name: true, email: true, avatarUrl: true } },
       },
     });
+
+    // Notify the user whose role changed
+    if (oldRole !== data.role) {
+      const changer = await prisma.user.findUnique({ where: { id: req.userId! } });
+      await createAndEmitNotification({
+        type: "ROLE_CHANGED",
+        content: `${changer?.name} changed your role on "${board.title}" from ${oldRole.toLowerCase()} to ${data.role.toLowerCase()}`,
+        userId: share.userId,
+        relatedBoardId: board.id,
+      });
+
+      // Also refresh their boards list so the role badge updates
+      const io = getIO();
+      if (io) {
+        io.to(`user:${share.userId}`).emit("boards:updated");
+      }
+    }
 
     res.json(updated);
   } catch (err) {
@@ -211,6 +249,9 @@ router.delete("/:boardId/shares/:shareId", async (req: AuthRequest, res: Respons
 
     const share = await prisma.boardShare.findFirst({
       where: { id: req.params.shareId, boardId: board.id },
+      include: {
+        user: { select: { id: true, name: true } },
+      },
     });
     if (!share) return res.status(404).json({ error: "Share not found" });
 
@@ -231,6 +272,26 @@ router.delete("/:boardId/shares/:shareId", async (req: AuthRequest, res: Respons
     }
 
     await prisma.boardShare.delete({ where: { id: share.id } });
+
+    // Notify the removed user (unless they removed themselves)
+    if (!isSelf) {
+      const remover = await prisma.user.findUnique({ where: { id: req.userId! } });
+      await createAndEmitNotification({
+        type: "BOARD_REMOVED",
+        content: `${remover?.name} removed you from the board "${board.title}"`,
+        userId: share.userId,
+        relatedBoardId: board.id,
+      });
+    }
+
+    // Refresh the removed user's board list
+    const io = getIO();
+    if (io) {
+      io.to(`user:${share.userId}`).emit("boards:updated");
+      // If the user is currently viewing this board, kick them out
+      io.to(`user:${share.userId}`).emit("board:access-revoked", { boardId: board.id });
+    }
+
     res.json({ success: true });
   } catch (err) {
     console.error(err);

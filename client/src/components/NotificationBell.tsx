@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../lib/api";
 import { Notification } from "../types";
+import { getSocket } from "../lib/socket";
 
 const typeIcons: Record<string, string> = {
   TASK_ASSIGNED: "M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z",
@@ -9,6 +11,9 @@ const typeIcons: Record<string, string> = {
   DUE_DATE_APPROACHING: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z",
   STATUS_CHANGED: "M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15",
   SPRINT_STARTING: "M13 10V3L4 14h7v7l9-11h-7z",
+  BOARD_SHARED: "M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z",
+  ROLE_CHANGED: "M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z",
+  BOARD_REMOVED: "M13 7a4 4 0 11-8 0 4 4 0 018 0zM9 14a6 6 0 00-6 6v1h12v-1a6 6 0 00-6-6zM21 12h-6",
 };
 
 export default function NotificationBell() {
@@ -16,6 +21,7 @@ export default function NotificationBell() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
@@ -34,6 +40,21 @@ export default function NotificationBell() {
   useEffect(() => {
     fetchNotifications();
   }, [fetchNotifications]);
+
+  // Listen for real-time notifications via socket
+  useEffect(() => {
+    const socket = getSocket();
+    if (!socket) return;
+
+    function handleNewNotification(notification: Notification) {
+      setNotifications((prev) => [notification, ...prev]);
+    }
+
+    socket.on("notification:new", handleNewNotification);
+    return () => {
+      socket.off("notification:new", handleNewNotification);
+    };
+  }, []);
 
   // Close on click outside
   useEffect(() => {
@@ -59,10 +80,19 @@ export default function NotificationBell() {
 
   async function markAllRead() {
     try {
-      await api.patch("/notifications/read-all");
+      await api.post("/notifications/read-all");
       setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
     } catch {
       // ignore
+    }
+  }
+
+  function handleNotificationClick(notification: Notification) {
+    markAsRead(notification.id);
+    // Navigate to the related board if available
+    if (notification.relatedBoardId && notification.type !== "BOARD_REMOVED") {
+      navigate(`/board/${notification.relatedBoardId}`);
+      setOpen(false);
     }
   }
 
@@ -126,15 +156,21 @@ export default function NotificationBell() {
               notifications.map((notification) => (
                 <button
                   key={notification.id}
-                  onClick={() => markAsRead(notification.id)}
+                  onClick={() => handleNotificationClick(notification)}
                   className={`w-full text-left px-4 py-3 flex items-start gap-3 hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors border-b border-stone-50 dark:border-stone-800/30 ${
                     !notification.read ? "bg-brand-50/50 dark:bg-brand-900/10" : ""
                   }`}
                 >
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
-                    !notification.read ? "bg-brand-100 dark:bg-brand-900/30" : "bg-stone-100 dark:bg-stone-800"
+                    notification.type === "BOARD_REMOVED"
+                      ? "bg-red-100 dark:bg-red-900/30"
+                      : !notification.read ? "bg-brand-100 dark:bg-brand-900/30" : "bg-stone-100 dark:bg-stone-800"
                   }`}>
-                    <svg className={`w-4 h-4 ${!notification.read ? "text-brand-600 dark:text-brand-400" : "text-stone-400 dark:text-stone-500"}`}
+                    <svg className={`w-4 h-4 ${
+                      notification.type === "BOARD_REMOVED"
+                        ? "text-red-600 dark:text-red-400"
+                        : !notification.read ? "text-brand-600 dark:text-brand-400" : "text-stone-400 dark:text-stone-500"
+                    }`}
                       fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                         d={typeIcons[notification.type] || typeIcons.STATUS_CHANGED} />

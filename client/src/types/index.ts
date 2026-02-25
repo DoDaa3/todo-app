@@ -7,7 +7,10 @@ export type NotificationType =
   | "MENTIONED"
   | "SPRINT_STARTING"
   | "DUE_DATE_APPROACHING"
-  | "STATUS_CHANGED";
+  | "STATUS_CHANGED"
+  | "BOARD_SHARED"
+  | "ROLE_CHANGED"
+  | "BOARD_REMOVED";
 
 // ─── User ───────────────────────────────────────────────────────────
 
@@ -206,8 +209,34 @@ export interface ActivityLog {
 
 // ─── Search Results ─────────────────────────────────────────────────
 
+export interface SearchResultTask {
+  id: string;
+  title: string;
+  description: string;
+  priority: Priority;
+  column: {
+    id: string;
+    board: { id: string; title: string };
+  };
+  updatedAt: string;
+}
+
+export interface SearchResultComment {
+  id: string;
+  content: string;
+  task: {
+    id: string;
+    title: string;
+    column: {
+      board: { id: string; title: string };
+    };
+  };
+  user: { id: string; name: string };
+  createdAt: string;
+}
+
 export interface SearchResults {
-  tasks: (Task & { column?: { board?: { title: string; id: string } } })[];
+  tasks: SearchResultTask[];
   boards: BoardSummary[];
-  comments: (Comment & { task?: { title: string; id: string } })[];
+  comments: SearchResultComment[];
 }

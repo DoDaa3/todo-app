@@ -31,6 +31,12 @@ export function initSocket(httpServer: HttpServer, clientUrl: string) {
   io.on("connection", (socket) => {
     console.log(`Client connected: ${socket.id}`);
 
+    // Join a user-specific room for notifications & board membership updates
+    socket.on("join-user", (userId: string) => {
+      socket.join(`user:${userId}`);
+      socket.data.userId = userId;
+    });
+
     socket.on("join-board", (boardId: string) => {
       socket.join(`board:${boardId}`);
     });
