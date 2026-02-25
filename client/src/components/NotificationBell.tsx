@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import api from "../lib/api";
 import { Notification } from "../types";
 import { getSocket } from "../lib/socket";
-import { usePolling } from "../hooks/usePolling";
 
 const typeIcons: Record<string, string> = {
   TASK_ASSIGNED: "M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z",
@@ -56,9 +55,6 @@ export default function NotificationBell() {
       socket.off("notification:new", handleNewNotification);
     };
   }, []);
-
-  // Fallback polling: keeps notifications live when Socket.io is unavailable (e.g. Vercel)
-  usePolling(fetchNotifications, 5000);
 
   // Close on click outside
   useEffect(() => {
