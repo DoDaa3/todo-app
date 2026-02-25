@@ -362,6 +362,22 @@ export default function KanbanPage() {
           columnId: activeColumnId,
         });
         const newTask = res.data;
+        // Optimistically add task to board state (works even when Socket.io is unavailable)
+        setBoard((prev) => {
+          if (!prev) return prev;
+          const exists = prev.columns.some((col) =>
+            col.tasks.some((t) => t.id === newTask.id)
+          );
+          if (exists) return prev;
+          return {
+            ...prev,
+            columns: prev.columns.map((col) =>
+              col.id === activeColumnId
+                ? { ...col, tasks: [...col.tasks, newTask] }
+                : col
+            ),
+          };
+        });
         // Create subtasks sequentially after task is created
         if (data.subtasks.length > 0) {
           for (const subtaskTitle of data.subtasks) {
