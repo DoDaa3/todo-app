@@ -9,7 +9,7 @@ const transporter = nodemailer.createTransport({
 });
 
 const fromAddress =
-  process.env.EMAIL_FROM || `Kanban App <${process.env.GMAIL_USER}>`;
+  process.env.EMAIL_FROM || `FlowBoard <${process.env.GMAIL_USER}>`;
 
 export async function sendVerificationEmail(
   to: string,
@@ -22,12 +22,12 @@ export async function sendVerificationEmail(
   await transporter.sendMail({
     from: fromAddress,
     to,
-    subject: "Verify your email — Kanban App",
+    subject: "Verify your email — FlowBoard",
     html: `
       <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 20px;">
         <div style="text-align: center; margin-bottom: 32px;">
-          <div style="display: inline-block; background: #2563eb; border-radius: 12px; padding: 12px;">
-            <span style="color: white; font-size: 24px; font-weight: bold;">K</span>
+          <div style="display: inline-block; background: linear-gradient(135deg, #8b5cf6, #6d28d9); border-radius: 12px; padding: 12px;">
+            <span style="color: white; font-size: 24px; font-weight: bold;">F</span>
           </div>
         </div>
         <h1 style="font-size: 24px; font-weight: 700; color: #111827; text-align: center; margin-bottom: 8px;">
@@ -38,14 +38,14 @@ export async function sendVerificationEmail(
         </p>
         <div style="text-align: center; margin-bottom: 32px;">
           <a href="${verifyUrl}"
-             style="display: inline-block; background: #2563eb; color: white; font-weight: 600;
+             style="display: inline-block; background: linear-gradient(135deg, #7c3aed, #6d28d9); color: white; font-weight: 600;
                     padding: 12px 32px; border-radius: 8px; text-decoration: none; font-size: 14px;">
             Verify Email Address
           </a>
         </div>
         <p style="color: #9ca3af; font-size: 13px; text-align: center;">
           If the button doesn't work, copy and paste this link into your browser:<br/>
-          <a href="${verifyUrl}" style="color: #2563eb; word-break: break-all;">${verifyUrl}</a>
+          <a href="${verifyUrl}" style="color: #7c3aed; word-break: break-all;">${verifyUrl}</a>
         </p>
       </div>
     `,
@@ -68,12 +68,12 @@ export async function sendDueDateReminderEmail(
   await transporter.sendMail({
     from: fromAddress,
     to,
-    subject: `Due date reminder: "${taskTitle}" — Kanban App`,
+    subject: `Due date reminder: "${taskTitle}" — FlowBoard`,
     html: `
       <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 20px;">
         <div style="text-align: center; margin-bottom: 32px;">
-          <div style="display: inline-block; background: #2563eb; border-radius: 12px; padding: 12px;">
-            <span style="color: white; font-size: 24px; font-weight: bold;">K</span>
+          <div style="display: inline-block; background: linear-gradient(135deg, #8b5cf6, #6d28d9); border-radius: 12px; padding: 12px;">
+            <span style="color: white; font-size: 24px; font-weight: bold;">F</span>
           </div>
         </div>
         <h1 style="font-size: 24px; font-weight: 700; color: #111827; text-align: center; margin-bottom: 8px;">
@@ -82,12 +82,12 @@ export async function sendDueDateReminderEmail(
         <p style="color: #6b7280; text-align: center; margin-bottom: 16px;">
           Hi ${name}, this is a reminder that the following task is due soon:
         </p>
-        <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+        <div style="background: #f5f3ff; border: 1px solid #ddd6fe; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
           <h2 style="font-size: 18px; color: #111827; margin: 0 0 8px 0;">${taskTitle}</h2>
           <p style="color: #ef4444; font-weight: 600; margin: 0;">Due: ${formattedDate}</p>
         </div>
         <p style="color: #9ca3af; font-size: 13px; text-align: center;">
-          Log in to your Kanban App to manage this task.
+          Log in to FlowBoard to manage this task.
         </p>
       </div>
     `,
@@ -145,12 +145,12 @@ export async function sendWorkspaceInviteEmail(
   await transporter.sendMail({
     from: fromAddress,
     to,
-    subject: `You've been invited to "${workspaceName}" — Kanban App`,
+    subject: `You've been invited to "${workspaceName}" — FlowBoard`,
     html: `
       <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 20px;">
         <div style="text-align: center; margin-bottom: 32px;">
-          <div style="display: inline-block; background: #2563eb; border-radius: 12px; padding: 12px;">
-            <span style="color: white; font-size: 24px; font-weight: bold;">K</span>
+          <div style="display: inline-block; background: linear-gradient(135deg, #8b5cf6, #6d28d9); border-radius: 12px; padding: 12px;">
+            <span style="color: white; font-size: 24px; font-weight: bold;">F</span>
           </div>
         </div>
         <h1 style="font-size: 24px; font-weight: 700; color: #111827; text-align: center; margin-bottom: 8px;">
@@ -161,9 +161,9 @@ export async function sendWorkspaceInviteEmail(
         </p>
         <div style="text-align: center; margin-bottom: 32px;">
           <a href="${clientUrl}"
-             style="display: inline-block; background: #2563eb; color: white; font-weight: 600;
+             style="display: inline-block; background: linear-gradient(135deg, #7c3aed, #6d28d9); color: white; font-weight: 600;
                     padding: 12px 32px; border-radius: 8px; text-decoration: none; font-size: 14px;">
-            Open Kanban App
+            Open FlowBoard
           </a>
         </div>
       </div>
