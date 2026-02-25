@@ -273,8 +273,29 @@ router.delete("/:boardId/shares/:shareId", async (req: AuthRequest, res: Respons
 
     await prisma.boardShare.delete({ where: { id: share.id } });
 
-    // Notify the removed user (unless they removed themselves)
-    if (!isSelf) {
+    const io = getIO();
+
+    if (isSelf) {
+      // User left voluntarily — notify all other collaborators + owner
+      const allShares = await prisma.boardShare.findMany({
+        where: { boardId: board.id },
+        select: { userId: true },
+      });
+      const recipientIds = [board.userId, ...allShares.map((s) => s.userId)];
+      for (const recipientId of recipientIds) {
+        await createAndEmitNotification({
+          type: "BOARD_REMOVED",
+          content: `${share.user.name} has left the board "${board.title}"`,
+          userId: recipientId,
+          relatedBoardId: board.id,
+        });
+      }
+      // Refresh the leaving user's board list
+      if (io) {
+        io.to(`user:${share.userId}`).emit("boards:updated");
+      }
+    } else {
+      // Kicked by owner/admin — notify the removed user
       const remover = await prisma.user.findUnique({ where: { id: req.userId! } });
       await createAndEmitNotification({
         type: "BOARD_REMOVED",
@@ -282,14 +303,11 @@ router.delete("/:boardId/shares/:shareId", async (req: AuthRequest, res: Respons
         userId: share.userId,
         relatedBoardId: board.id,
       });
-    }
-
-    // Refresh the removed user's board list
-    const io = getIO();
-    if (io) {
-      io.to(`user:${share.userId}`).emit("boards:updated");
-      // If the user is currently viewing this board, kick them out
-      io.to(`user:${share.userId}`).emit("board:access-revoked", { boardId: board.id });
+      // Refresh their board list and kick them out if viewing the board
+      if (io) {
+        io.to(`user:${share.userId}`).emit("boards:updated");
+        io.to(`user:${share.userId}`).emit("board:access-revoked", { boardId: board.id });
+      }
     }
 
     res.json({ success: true });
