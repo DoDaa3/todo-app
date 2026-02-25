@@ -6,6 +6,22 @@ import { authenticate, AuthRequest } from "../middleware/auth";
 const router = Router();
 router.use(authenticate);
 
+// Helper: check if user has access to a board (owner or shared)
+async function getBoardAccess(boardId: string, userId: string): Promise<"OWNER" | "ADMIN" | "EDITOR" | "VIEWER" | null> {
+  const board = await prisma.board.findUnique({ where: { id: boardId } });
+  if (!board) return null;
+  if (board.userId === userId) return "OWNER";
+  const share = await prisma.boardShare.findUnique({
+    where: { boardId_userId: { boardId, userId } },
+  });
+  if (share) return share.role;
+  return null;
+}
+
+function canWrite(role: string | null): boolean {
+  return role === "OWNER" || role === "ADMIN" || role === "EDITOR";
+}
+
 const createLabelSchema = z.object({
   name: z.string().min(1).max(50),
   color: z.string().min(1).max(30),
@@ -30,10 +46,8 @@ const unassignLabelSchema = z.object({
 // List labels for a board
 router.get("/board/:boardId", async (req: AuthRequest, res: Response) => {
   try {
-    const board = await prisma.board.findFirst({
-      where: { id: req.params.boardId, userId: req.userId },
-    });
-    if (!board) {
+    const access = await getBoardAccess(req.params.boardId, req.userId!);
+    if (!access) {
       return res.status(404).json({ error: "Board not found" });
     }
 
@@ -56,11 +70,9 @@ router.post("/", async (req: AuthRequest, res: Response) => {
   try {
     const data = createLabelSchema.parse(req.body);
 
-    const board = await prisma.board.findFirst({
-      where: { id: data.boardId, userId: req.userId },
-    });
-    if (!board) {
-      return res.status(404).json({ error: "Board not found" });
+    const access = await getBoardAccess(data.boardId, req.userId!);
+    if (!canWrite(access)) {
+      return res.status(403).json({ error: "You don't have write access to this board" });
     }
 
     const label = await prisma.label.create({
@@ -90,8 +102,12 @@ router.patch("/:id", async (req: AuthRequest, res: Response) => {
       where: { id: req.params.id },
       include: { board: true },
     });
-    if (!label || label.board.userId !== req.userId) {
+    if (!label) {
       return res.status(404).json({ error: "Label not found" });
+    }
+    const access = await getBoardAccess(label.boardId, req.userId!);
+    if (!canWrite(access)) {
+      return res.status(403).json({ error: "You don't have write access to this board" });
     }
 
     const updated = await prisma.label.update({
@@ -119,8 +135,12 @@ router.delete("/:id", async (req: AuthRequest, res: Response) => {
       where: { id: req.params.id },
       include: { board: true },
     });
-    if (!label || label.board.userId !== req.userId) {
+    if (!label) {
       return res.status(404).json({ error: "Label not found" });
+    }
+    const access = await getBoardAccess(label.boardId, req.userId!);
+    if (!canWrite(access)) {
+      return res.status(403).json({ error: "You don't have write access to this board" });
     }
 
     await prisma.label.delete({ where: { id: req.params.id } });
@@ -136,13 +156,17 @@ router.post("/assign", async (req: AuthRequest, res: Response) => {
   try {
     const data = assignLabelSchema.parse(req.body);
 
-    // Verify the label exists and user owns the board
+    // Verify the label exists and user has write access to the board
     const label = await prisma.label.findUnique({
       where: { id: data.labelId },
       include: { board: true },
     });
-    if (!label || label.board.userId !== req.userId) {
+    if (!label) {
       return res.status(404).json({ error: "Label not found" });
+    }
+    const access = await getBoardAccess(label.boardId, req.userId!);
+    if (!canWrite(access)) {
+      return res.status(403).json({ error: "You don't have write access to this board" });
     }
 
     // Verify the task exists and belongs to the same board
@@ -180,13 +204,17 @@ router.delete("/unassign", async (req: AuthRequest, res: Response) => {
   try {
     const data = unassignLabelSchema.parse(req.body);
 
-    // Verify the label exists and user owns the board
+    // Verify the label exists and user has write access to the board
     const label = await prisma.label.findUnique({
       where: { id: data.labelId },
       include: { board: true },
     });
-    if (!label || label.board.userId !== req.userId) {
+    if (!label) {
       return res.status(404).json({ error: "Label not found" });
+    }
+    const access = await getBoardAccess(label.boardId, req.userId!);
+    if (!canWrite(access)) {
+      return res.status(403).json({ error: "You don't have write access to this board" });
     }
 
     const taskLabel = await prisma.taskLabel.findUnique({

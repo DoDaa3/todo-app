@@ -53,6 +53,14 @@ router.get("/board/:boardId", async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: "Board not found" });
     }
 
+    // Find the last column (highest position) to use as the "done" column
+    const lastColumn = await prisma.column.findFirst({
+      where: { boardId: req.params.boardId },
+      orderBy: { position: "desc" },
+      select: { id: true },
+    });
+    const doneColumnId = lastColumn?.id;
+
     const sprints = await prisma.sprint.findMany({
       where: { boardId: req.params.boardId },
       orderBy: { createdAt: "desc" },
@@ -60,7 +68,7 @@ router.get("/board/:boardId", async (req: AuthRequest, res: Response) => {
         tasks: {
           select: {
             id: true,
-            column: { select: { title: true } },
+            columnId: true,
           },
         },
       },
@@ -68,9 +76,9 @@ router.get("/board/:boardId", async (req: AuthRequest, res: Response) => {
 
     const result = sprints.map((sprint) => {
       const total = sprint.tasks.length;
-      const completed = sprint.tasks.filter(
-        (t) => t.column.title === "Done"
-      ).length;
+      const completed = doneColumnId
+        ? sprint.tasks.filter((t) => t.columnId === doneColumnId).length
+        : 0;
 
       const { tasks, ...sprintData } = sprint;
       return {
@@ -96,11 +104,17 @@ router.post("/", async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: "Board not found" });
     }
 
+    const startDate = new Date(data.startDate);
+    const endDate = new Date(data.endDate);
+    if (endDate <= startDate) {
+      return res.status(400).json({ error: "End date must be after start date" });
+    }
+
     const sprint = await prisma.sprint.create({
       data: {
         name: data.name.trim(),
-        startDate: new Date(data.startDate),
-        endDate: new Date(data.endDate),
+        startDate,
+        endDate,
         boardId: data.boardId,
       },
     });
@@ -123,6 +137,13 @@ router.patch("/:id", async (req: AuthRequest, res: Response) => {
     const sprint = await getSprintWithBoard(req.params.id);
     if (!sprint || sprint.board.userId !== req.userId) {
       return res.status(404).json({ error: "Sprint not found" });
+    }
+
+    // Validate dates: resolve effective start/end considering partial updates
+    const effectiveStart = data.startDate ? new Date(data.startDate) : sprint.startDate;
+    const effectiveEnd = data.endDate ? new Date(data.endDate) : sprint.endDate;
+    if (effectiveEnd <= effectiveStart) {
+      return res.status(400).json({ error: "End date must be after start date" });
     }
 
     const updated = await prisma.sprint.update({
@@ -237,12 +258,13 @@ router.post("/:id/complete", async (req: AuthRequest, res: Response) => {
         .json({ error: "Only ACTIVE sprints can be completed" });
     }
 
-    // Find all "Done" column IDs for this board
-    const doneColumns = await prisma.column.findMany({
-      where: { boardId: sprint.boardId, title: "Done" },
+    // Use the last column (highest position) as the "done" column
+    const lastColumn = await prisma.column.findFirst({
+      where: { boardId: sprint.boardId },
+      orderBy: { position: "desc" },
       select: { id: true },
     });
-    const doneColumnIds = doneColumns.map((c) => c.id);
+    const doneColumnIds = lastColumn ? [lastColumn.id] : [];
 
     await prisma.$transaction(async (tx) => {
       // Move unfinished tasks (not in a Done column) back to backlog

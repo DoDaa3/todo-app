@@ -22,6 +22,11 @@ export default function SearchModal({ open, onClose }: SearchModalProps) {
       setResults(null);
       setTimeout(() => inputRef.current?.focus(), 100);
     }
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+    };
   }, [open]);
 
   // Global keyboard shortcut

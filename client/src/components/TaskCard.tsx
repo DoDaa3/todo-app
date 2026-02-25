@@ -1,5 +1,6 @@
 import { Draggable } from "@hello-pangea/dnd";
 import { Task, Priority } from "../types";
+import { formatDate, isOverdue } from "../lib/date";
 
 interface TaskCardProps {
   task: Task;
@@ -18,17 +19,6 @@ const priorityConfig: Record<
   HIGH: { label: "High", bg: "bg-amber-50 dark:bg-amber-900/30", text: "text-amber-700 dark:text-amber-300", dot: "bg-amber-500" },
   URGENT: { label: "Urgent", bg: "bg-red-50 dark:bg-red-900/30", text: "text-red-700 dark:text-red-300", dot: "bg-red-500" },
 };
-
-function formatDate(dateStr: string | null) {
-  if (!dateStr) return null;
-  const d = new Date(dateStr);
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-}
-
-function isOverdue(dateStr: string | null) {
-  if (!dateStr) return false;
-  return new Date(dateStr) < new Date(new Date().toDateString());
-}
 
 export default function TaskCard({
   task,
@@ -126,7 +116,7 @@ export default function TaskCard({
                     d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                   />
                 </svg>
-                {formatDate(task.dueDate)}
+                {formatDate(task.dueDate, true)}
               </span>
             )}
           </div>

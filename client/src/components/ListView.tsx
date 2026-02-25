@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Column, Task, Priority } from "../types";
+import { formatDate, isOverdue } from "../lib/date";
 
 interface ListViewProps {
   columns: Column[];
@@ -25,24 +26,11 @@ const priorityStyle: Record<Priority, string> = {
 type SortKey = "title" | "priority" | "dueDate" | "status";
 type SortDir = "asc" | "desc";
 
-function formatDate(d: string | null) {
-  if (!d) return "—";
-  return new Date(d).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
-
-function isOverdue(d: string | null) {
-  if (!d) return false;
-  return new Date(d) < new Date(new Date().toDateString());
-}
-
 export default function ListView({
   columns,
   onEditTask,
   onDeleteTask,
+  onAddTask,
 }: ListViewProps) {
   const [sortKey, setSortKey] = useState<SortKey>("status");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
@@ -122,7 +110,15 @@ export default function ListView({
             {sorted.length === 0 && (
               <tr>
                 <td colSpan={5} className="text-center py-12 text-stone-400 dark:text-stone-500">
-                  No tasks to display
+                  <p>No tasks to display</p>
+                  {columns.length > 0 && (
+                    <button
+                      onClick={() => onAddTask(columns[0].id)}
+                      className="mt-2 text-sm text-brand-600 hover:text-brand-700 font-medium"
+                    >
+                      + Add a task
+                    </button>
+                  )}
                 </td>
               </tr>
             )}

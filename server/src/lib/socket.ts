@@ -33,54 +33,78 @@ export function initSocket(httpServer: HttpServer, clientUrl: string) {
 
     // Join a user-specific room for notifications & board membership updates
     socket.on("join-user", (userId: string) => {
-      socket.join(`user:${userId}`);
-      socket.data.userId = userId;
+      try {
+        socket.join(`user:${userId}`);
+        socket.data.userId = userId;
+      } catch (err) {
+        console.error(`[Socket] Error in join-user:`, err);
+      }
     });
 
     socket.on("join-board", (boardId: string) => {
-      socket.join(`board:${boardId}`);
+      try {
+        socket.join(`board:${boardId}`);
+      } catch (err) {
+        console.error(`[Socket] Error in join-board:`, err);
+      }
     });
 
     socket.on("leave-board", (boardId: string) => {
-      socket.leave(`board:${boardId}`);
+      try {
+        socket.leave(`board:${boardId}`);
+      } catch (err) {
+        console.error(`[Socket] Error in leave-board:`, err);
+      }
     });
 
     // Workspace presence
     socket.on("join-workspace", (data: { workspaceId: string; userId: string }) => {
-      const { workspaceId, userId } = data;
-      socket.join(`workspace:${workspaceId}`);
-      socket.data.workspaceId = workspaceId;
-      socket.data.userId = userId;
+      try {
+        const { workspaceId, userId } = data;
+        socket.join(`workspace:${workspaceId}`);
+        socket.data.workspaceId = workspaceId;
+        socket.data.userId = userId;
 
-      if (!onlineUsers.has(workspaceId)) {
-        onlineUsers.set(workspaceId, new Set());
-      }
-      onlineUsers.get(workspaceId)!.add(userId);
+        if (!onlineUsers.has(workspaceId)) {
+          onlineUsers.set(workspaceId, new Set());
+        }
+        onlineUsers.get(workspaceId)!.add(userId);
 
-      io.to(`workspace:${workspaceId}`).emit("workspace:presence", {
-        onlineUserIds: Array.from(onlineUsers.get(workspaceId)!),
-      });
-    });
-
-    socket.on("leave-workspace", (workspaceId: string) => {
-      socket.leave(`workspace:${workspaceId}`);
-      if (socket.data.userId && onlineUsers.has(workspaceId)) {
-        onlineUsers.get(workspaceId)!.delete(socket.data.userId);
         io.to(`workspace:${workspaceId}`).emit("workspace:presence", {
           onlineUserIds: Array.from(onlineUsers.get(workspaceId)!),
         });
+      } catch (err) {
+        console.error(`[Socket] Error in join-workspace:`, err);
+      }
+    });
+
+    socket.on("leave-workspace", (workspaceId: string) => {
+      try {
+        socket.leave(`workspace:${workspaceId}`);
+        if (socket.data.userId && onlineUsers.has(workspaceId)) {
+          onlineUsers.get(workspaceId)!.delete(socket.data.userId);
+          io.to(`workspace:${workspaceId}`).emit("workspace:presence", {
+            onlineUserIds: Array.from(onlineUsers.get(workspaceId)!),
+          });
+        }
+      } catch (err) {
+        console.error(`[Socket] Error in leave-workspace:`, err);
       }
     });
 
     socket.on("disconnect", () => {
-      const { workspaceId, userId } = socket.data;
-      if (workspaceId && userId && onlineUsers.has(workspaceId)) {
-        onlineUsers.get(workspaceId)!.delete(userId);
-        io.to(`workspace:${workspaceId}`).emit("workspace:presence", {
-          onlineUserIds: Array.from(onlineUsers.get(workspaceId)!),
-        });
+      try {
+        const { workspaceId, userId } = socket.data;
+        if (workspaceId && userId && onlineUsers.has(workspaceId)) {
+          onlineUsers.get(workspaceId)!.delete(userId);
+          io.to(`workspace:${workspaceId}`).emit("workspace:presence", {
+            onlineUserIds: Array.from(onlineUsers.get(workspaceId)!),
+          });
+        }
+        console.log(`Client disconnected: ${socket.id}`);
+      } catch (err) {
+        console.error(`[Socket] Error in disconnect:`, err);
       }
-      console.log(`Client disconnected: ${socket.id}`);
     });
   });
 

@@ -138,6 +138,14 @@ router.post("/", async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: "Column not found" });
     }
 
+    // Enforce WIP limit
+    if ((column as any).wipLimit) {
+      const taskCount = await prisma.task.count({ where: { columnId: data.columnId } });
+      if (taskCount >= (column as any).wipLimit) {
+        return res.status(400).json({ error: `Column WIP limit of ${(column as any).wipLimit} reached` });
+      }
+    }
+
     const maxPos = await prisma.task.aggregate({
       where: { columnId: data.columnId },
       _max: { position: true },
@@ -300,6 +308,11 @@ router.post("/:id/dependencies", async (req: AuthRequest, res: Response) => {
     const { dependsOnId } = req.body;
     if (!dependsOnId) return res.status(400).json({ error: "dependsOnId required" });
 
+    // Prevent self-dependency
+    if (req.params.id === dependsOnId) {
+      return res.status(400).json({ error: "A task cannot depend on itself" });
+    }
+
     const task = await prisma.task.findUnique({
       where: { id: req.params.id },
       include: { column: { include: { board: true } } },
@@ -307,6 +320,23 @@ router.post("/:id/dependencies", async (req: AuthRequest, res: Response) => {
     if (!task) return res.status(404).json({ error: "Task not found" });
     if (!(await verifyBoardWriteAccess(task.column.boardId, req.userId!))) {
       return res.status(403).json({ error: "You have view-only access to this board" });
+    }
+
+    // Check for circular dependency via BFS
+    const visited = new Set<string>();
+    const queue = [dependsOnId];
+    while (queue.length > 0) {
+      const current = queue.shift()!;
+      if (current === req.params.id) {
+        return res.status(400).json({ error: "This would create a circular dependency" });
+      }
+      if (visited.has(current)) continue;
+      visited.add(current);
+      const upstream = await prisma.taskDependency.findMany({
+        where: { taskId: current },
+        select: { dependsOnId: true },
+      });
+      queue.push(...upstream.map((d) => d.dependsOnId));
     }
 
     const dep = await prisma.taskDependency.create({
@@ -348,6 +378,14 @@ router.patch("/:id/move", async (req: AuthRequest, res: Response) => {
     const targetColumn = await verifyColumnOwnership(data.columnId, req.userId!);
     if (!targetColumn) {
       return res.status(404).json({ error: "Target column not found" });
+    }
+
+    // Enforce WIP limit when moving to a different column
+    if (task.columnId !== data.columnId && (targetColumn as any).wipLimit) {
+      const taskCount = await prisma.task.count({ where: { columnId: data.columnId } });
+      if (taskCount >= (targetColumn as any).wipLimit) {
+        return res.status(400).json({ error: `Column WIP limit of ${(targetColumn as any).wipLimit} reached` });
+      }
     }
 
     const boardId = task.column.boardId;

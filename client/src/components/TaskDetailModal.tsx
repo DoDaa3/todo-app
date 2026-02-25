@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Task, Priority, Subtask, Comment } from "../types";
 import api from "../lib/api";
 import { useToast } from "./Toast";
+import { formatDate as formatDateUtil } from "../lib/date";
 
 interface TaskDetailModalProps {
   open: boolean;
@@ -161,11 +162,6 @@ export default function TaskDetailModal({ open, task, canEdit = true, onClose, o
     { key: "comments" as const, label: `Comments${comments.length ? ` (${comments.length})` : ""}` },
   ];
 
-  function formatDate(d: string) {
-    if (!d) return "";
-    return new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-  }
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
@@ -284,7 +280,7 @@ export default function TaskDetailModal({ open, task, canEdit = true, onClose, o
                     <div>
                       <label className="block text-xs font-medium text-stone-500 dark:text-stone-400 uppercase tracking-wider mb-1">Due Date</label>
                       <p className="text-sm text-stone-700 dark:text-stone-300">
-                        {dueDate ? formatDate(dueDate) : <span className="text-stone-400 italic">No due date</span>}
+                        {dueDate ? formatDateUtil(dueDate) : <span className="text-stone-400 italic">No due date</span>}
                       </p>
                     </div>
                   </div>

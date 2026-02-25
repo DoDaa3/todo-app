@@ -149,6 +149,14 @@ router.get("/:id/stats", async (req: AuthRequest, res: Response) => {
     const weekAgo = new Date(now);
     weekAgo.setDate(weekAgo.getDate() - 7);
 
+    // Find the last column (highest position) to treat as the "done" column
+    const lastColumn = await prisma.column.findFirst({
+      where: { boardId: req.params.id },
+      orderBy: { position: "desc" },
+      select: { id: true },
+    });
+    const doneColumnId = lastColumn?.id;
+
     const [totalTasks, completedThisWeek, overdueTasks, tasksByColumn, tasksByMember] =
       await Promise.all([
         prisma.task.count({
@@ -156,13 +164,16 @@ router.get("/:id/stats", async (req: AuthRequest, res: Response) => {
         }),
         prisma.task.count({
           where: {
-            column: { boardId: req.params.id, title: "Done" },
+            ...(doneColumnId
+              ? { columnId: doneColumnId }
+              : { column: { boardId: req.params.id, title: "Done" } }),
             updatedAt: { gte: weekAgo },
           },
         }),
         prisma.task.count({
           where: {
-            column: { boardId: req.params.id, title: { not: "Done" } },
+            column: { boardId: req.params.id },
+            ...(doneColumnId ? { columnId: { not: doneColumnId } } : {}),
             dueDate: { lt: now },
           },
         }),

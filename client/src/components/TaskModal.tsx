@@ -11,7 +11,8 @@ interface TaskModalProps {
     priority: Priority;
     dueDate: string | null;
     subtasks: string[];
-  }) => void;
+  }) => Promise<void> | void;
+  saving?: boolean;
 }
 
 export default function TaskModal({
@@ -19,6 +20,7 @@ export default function TaskModal({
   task,
   onClose,
   onSave,
+  saving = false,
 }: TaskModalProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -236,10 +238,12 @@ export default function TaskModal({
             </button>
             <button
               type="submit"
+              disabled={saving || !title.trim()}
               className="px-4 py-2 text-sm font-medium text-white bg-brand-600
-                rounded-lg hover:bg-brand-700 transition-colors"
+                rounded-lg hover:bg-brand-700 transition-colors
+                disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isEditing ? "Save Changes" : "Create Task"}
+              {saving ? (isEditing ? "Saving..." : "Creating...") : (isEditing ? "Save Changes" : "Create Task")}
             </button>
           </div>
         </form>

@@ -68,8 +68,12 @@ export default function BoardColumn({
           <h3 className={`font-bold text-sm uppercase tracking-wider ${accent.text}`}>
             {column.title}
           </h3>
-          <span className={`text-xs font-bold rounded-full px-2 py-0.5 ${accent.badge}`}>
-            {column.tasks.length}
+          <span className={`text-xs font-bold rounded-full px-2 py-0.5 ${
+            column.wipLimit && column.tasks.length > column.wipLimit
+              ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+              : accent.badge
+          }`}>
+            {column.tasks.length}{column.wipLimit ? `/${column.wipLimit}` : ""}
           </span>
         </div>
         {canEdit && (
