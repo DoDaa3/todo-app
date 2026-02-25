@@ -8,7 +8,10 @@ CREATE TYPE "WorkspaceRole" AS ENUM ('ADMIN', 'MEMBER', 'VIEWER');
 CREATE TYPE "SprintStatus" AS ENUM ('PLANNING', 'ACTIVE', 'COMPLETED');
 
 -- CreateEnum
-CREATE TYPE "NotificationType" AS ENUM ('TASK_ASSIGNED', 'COMMENT_ADDED', 'MENTIONED', 'SPRINT_STARTING', 'DUE_DATE_APPROACHING', 'STATUS_CHANGED');
+CREATE TYPE "BoardRole" AS ENUM ('ADMIN', 'EDITOR', 'VIEWER');
+
+-- CreateEnum
+CREATE TYPE "NotificationType" AS ENUM ('TASK_ASSIGNED', 'COMMENT_ADDED', 'MENTIONED', 'SPRINT_STARTING', 'DUE_DATE_APPROACHING', 'STATUS_CHANGED', 'BOARD_SHARED', 'ROLE_CHANGED', 'BOARD_REMOVED');
 
 -- CreateTable
 CREATE TABLE "User" (
@@ -59,6 +62,17 @@ CREATE TABLE "Board" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Board_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "BoardShare" (
+    "id" TEXT NOT NULL,
+    "boardId" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "role" "BoardRole" NOT NULL DEFAULT 'VIEWER',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "BoardShare_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -214,6 +228,15 @@ CREATE INDEX "Board_userId_idx" ON "Board"("userId");
 CREATE INDEX "Board_workspaceId_idx" ON "Board"("workspaceId");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "BoardShare_boardId_userId_key" ON "BoardShare"("boardId", "userId");
+
+-- CreateIndex
+CREATE INDEX "BoardShare_boardId_idx" ON "BoardShare"("boardId");
+
+-- CreateIndex
+CREATE INDEX "BoardShare_userId_idx" ON "BoardShare"("userId");
+
+-- CreateIndex
 CREATE INDEX "Column_boardId_idx" ON "Column"("boardId");
 
 -- CreateIndex
@@ -239,6 +262,9 @@ CREATE INDEX "Subtask_taskId_idx" ON "Subtask"("taskId");
 
 -- CreateIndex
 CREATE INDEX "Comment_taskId_idx" ON "Comment"("taskId");
+
+-- CreateIndex
+CREATE INDEX "Comment_userId_idx" ON "Comment"("userId");
 
 -- CreateIndex
 CREATE INDEX "Label_boardId_idx" ON "Label"("boardId");
@@ -284,6 +310,12 @@ ALTER TABLE "Board" ADD CONSTRAINT "Board_userId_fkey" FOREIGN KEY ("userId") RE
 
 -- AddForeignKey
 ALTER TABLE "Board" ADD CONSTRAINT "Board_workspaceId_fkey" FOREIGN KEY ("workspaceId") REFERENCES "Workspace"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "BoardShare" ADD CONSTRAINT "BoardShare_boardId_fkey" FOREIGN KEY ("boardId") REFERENCES "Board"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "BoardShare" ADD CONSTRAINT "BoardShare_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Column" ADD CONSTRAINT "Column_boardId_fkey" FOREIGN KEY ("boardId") REFERENCES "Board"("id") ON DELETE CASCADE ON UPDATE CASCADE;
