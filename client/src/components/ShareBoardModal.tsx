@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import api from "../lib/api";
 import { useToast } from "./Toast";
+import { usePolling } from "../hooks/usePolling";
 import { BoardRole } from "../types";
 
 interface Share {
@@ -82,7 +83,7 @@ export default function ShareBoardModal({
     }
   }, [open, boardId]);
 
-  async function fetchShares() {
+  const fetchShares = useCallback(async () => {
     setLoading(true);
     try {
       const res = await api.get(`/boards/${boardId}/shares`);
@@ -93,7 +94,10 @@ export default function ShareBoardModal({
     } finally {
       setLoading(false);
     }
-  }
+  }, [boardId, showToast]);
+
+  // Fallback polling: keeps collaborator list live when Socket.io is unavailable (e.g. Vercel)
+  usePolling(fetchShares, 4000, open);
 
   async function handleInvite(e: React.FormEvent) {
     e.preventDefault();

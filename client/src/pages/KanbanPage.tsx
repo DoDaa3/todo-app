@@ -1,8 +1,9 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { DragDropContext, DropResult } from "@hello-pangea/dnd";
 import api from "../lib/api";
 import { connectSocket } from "../lib/socket";
+import { usePolling } from "../hooks/usePolling";
 import { Board, Task, Column, Priority } from "../types";
 import Navbar from "../components/Navbar";
 import BoardColumn from "../components/BoardColumn";
@@ -75,6 +76,7 @@ export default function KanbanPage() {
   const { user } = useAuth();
   const [board, setBoard] = useState<Board | null>(null);
   const [loading, setLoading] = useState(true);
+  const initialLoadRef = useRef(true);
 
   // View mode
   const [viewMode, setViewMode] = useState<ViewMode>("kanban");
@@ -122,12 +124,22 @@ export default function KanbanPage() {
     try {
       const res = await api.get(`/boards/${boardId}`);
       setBoard(res.data);
-    } catch {
-      navigate("/");
+    } catch (err: any) {
+      // 403/404 during polling means access was revoked (kicked) or board deleted
+      if (err?.response?.status === 403 || err?.response?.status === 404) {
+        if (!initialLoadRef.current) {
+          showToast("You have been removed from this board", "error");
+        }
+        navigate("/");
+      } else if (initialLoadRef.current) {
+        // Only navigate on initial load for other errors
+        navigate("/");
+      }
     } finally {
       setLoading(false);
+      initialLoadRef.current = false;
     }
-  }, [boardId, navigate]);
+  }, [boardId, navigate, showToast]);
 
   // Fetch board data
   useEffect(() => {
@@ -233,6 +245,9 @@ export default function KanbanPage() {
       socket.off("board:access-revoked");
     };
   }, [boardId, navigate, showToast]);
+
+  // Fallback polling: keeps board state live when Socket.io is unavailable (e.g. Vercel)
+  usePolling(fetchBoard, 3000, !loading);
 
   // Filtered columns with filtered tasks
   const filteredColumns = useMemo(() => {

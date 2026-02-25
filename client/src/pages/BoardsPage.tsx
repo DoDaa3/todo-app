@@ -7,6 +7,7 @@ import SearchModal from "../components/SearchModal";
 import ConfirmModal from "../components/ConfirmModal";
 import { useToast } from "../components/Toast";
 import { getSocket } from "../lib/socket";
+import { usePolling } from "../hooks/usePolling";
 
 export default function BoardsPage() {
   const [boards, setBoards] = useState<BoardSummary[]>([]);
@@ -68,6 +69,9 @@ export default function BoardsPage() {
       socket.off("boards:updated", fetchBoards);
     };
   }, [fetchBoards]);
+
+  // Fallback polling: keeps board list live when Socket.io is unavailable (e.g. Vercel)
+  usePolling(fetchBoards, 5000, !loading);
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
