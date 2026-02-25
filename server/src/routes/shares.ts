@@ -135,29 +135,31 @@ router.post("/:boardId/shares", async (req: AuthRequest, res: Response) => {
       },
     });
 
-    // Create notification + real-time push
-    await createAndEmitNotification({
-      type: "BOARD_SHARED",
-      content: `${inviter?.name} shared the board "${board.title}" with you as ${data.role.toLowerCase()}`,
-      userId: invitedUser.id,
-      relatedBoardId: board.id,
-    });
-
-    // Emit boards-updated so the invited user's board list refreshes in real-time
-    const io = getIO();
-    if (io) {
-      io.to(`user:${invitedUser.id}`).emit("boards:updated");
-    }
-
-    // Send email notification (fire-and-forget)
-    sendBoardInviteEmail(
-      invitedUser.email,
-      inviter?.name || "Someone",
-      board.title,
-      data.role
-    ).catch(() => {});
-
     res.status(201).json(share);
+
+    // Best-effort: notifications, socket events, email
+    try {
+      await createAndEmitNotification({
+        type: "BOARD_SHARED",
+        content: `${inviter?.name} shared the board "${board.title}" with you as ${data.role.toLowerCase()}`,
+        userId: invitedUser.id,
+        relatedBoardId: board.id,
+      });
+
+      const io = getIO();
+      if (io) {
+        io.to(`user:${invitedUser.id}`).emit("boards:updated");
+      }
+
+      sendBoardInviteEmail(
+        invitedUser.email,
+        inviter?.name || "Someone",
+        board.title,
+        data.role
+      ).catch(() => {});
+    } catch (notifErr) {
+      console.error("Failed to send invite notifications:", notifErr);
+    }
   } catch (err) {
     if (err instanceof z.ZodError) {
       return res.status(400).json({ error: err.errors[0].message });
@@ -212,24 +214,27 @@ router.patch("/:boardId/shares/:shareId", async (req: AuthRequest, res: Response
       },
     });
 
-    // Notify the user whose role changed
-    if (oldRole !== data.role) {
-      const changer = await prisma.user.findUnique({ where: { id: req.userId! } });
-      await createAndEmitNotification({
-        type: "ROLE_CHANGED",
-        content: `${changer?.name} changed your role on "${board.title}" from ${oldRole.toLowerCase()} to ${data.role.toLowerCase()}`,
-        userId: share.userId,
-        relatedBoardId: board.id,
-      });
+    res.json(updated);
 
-      // Also refresh their boards list so the role badge updates
-      const io = getIO();
-      if (io) {
-        io.to(`user:${share.userId}`).emit("boards:updated");
+    // Best-effort: notify the user whose role changed
+    if (oldRole !== data.role) {
+      try {
+        const changer = await prisma.user.findUnique({ where: { id: req.userId! } });
+        await createAndEmitNotification({
+          type: "ROLE_CHANGED",
+          content: `${changer?.name} changed your role on "${board.title}" from ${oldRole.toLowerCase()} to ${data.role.toLowerCase()}`,
+          userId: share.userId,
+          relatedBoardId: board.id,
+        });
+
+        const io = getIO();
+        if (io) {
+          io.to(`user:${share.userId}`).emit("boards:updated");
+        }
+      } catch (notifErr) {
+        console.error("Failed to send role-change notification:", notifErr);
       }
     }
-
-    res.json(updated);
   } catch (err) {
     if (err instanceof z.ZodError) {
       return res.status(400).json({ error: err.errors[0].message });
@@ -273,44 +278,50 @@ router.delete("/:boardId/shares/:shareId", async (req: AuthRequest, res: Respons
 
     await prisma.boardShare.delete({ where: { id: share.id } });
 
-    const io = getIO();
+    // Respond immediately — notifications are best-effort
+    res.json({ success: true });
 
-    if (isSelf) {
-      // User left voluntarily — notify all other collaborators + owner
-      const allShares = await prisma.boardShare.findMany({
-        where: { boardId: board.id },
-        select: { userId: true },
-      });
-      const recipientIds = [board.userId, ...allShares.map((s) => s.userId)];
-      for (const recipientId of recipientIds) {
+    // Fire-and-forget: send notifications and socket events
+    try {
+      const io = getIO();
+
+      if (isSelf) {
+        // User left voluntarily — notify all other collaborators + owner
+        const allShares = await prisma.boardShare.findMany({
+          where: { boardId: board.id },
+          select: { userId: true },
+        });
+        const recipientIds = [board.userId, ...allShares.map((s) => s.userId)];
+        for (const recipientId of recipientIds) {
+          await createAndEmitNotification({
+            type: "BOARD_REMOVED",
+            content: `${share.user.name} has left the board "${board.title}"`,
+            userId: recipientId,
+            relatedBoardId: board.id,
+          });
+        }
+        // Refresh the leaving user's board list
+        if (io) {
+          io.to(`user:${share.userId}`).emit("boards:updated");
+        }
+      } else {
+        // Kicked by owner/admin — notify the removed user
+        const remover = await prisma.user.findUnique({ where: { id: req.userId! } });
         await createAndEmitNotification({
           type: "BOARD_REMOVED",
-          content: `${share.user.name} has left the board "${board.title}"`,
-          userId: recipientId,
+          content: `${remover?.name} removed you from the board "${board.title}"`,
+          userId: share.userId,
           relatedBoardId: board.id,
         });
+        // Refresh their board list and kick them out if viewing the board
+        if (io) {
+          io.to(`user:${share.userId}`).emit("boards:updated");
+          io.to(`user:${share.userId}`).emit("board:access-revoked", { boardId: board.id });
+        }
       }
-      // Refresh the leaving user's board list
-      if (io) {
-        io.to(`user:${share.userId}`).emit("boards:updated");
-      }
-    } else {
-      // Kicked by owner/admin — notify the removed user
-      const remover = await prisma.user.findUnique({ where: { id: req.userId! } });
-      await createAndEmitNotification({
-        type: "BOARD_REMOVED",
-        content: `${remover?.name} removed you from the board "${board.title}"`,
-        userId: share.userId,
-        relatedBoardId: board.id,
-      });
-      // Refresh their board list and kick them out if viewing the board
-      if (io) {
-        io.to(`user:${share.userId}`).emit("boards:updated");
-        io.to(`user:${share.userId}`).emit("board:access-revoked", { boardId: board.id });
-      }
+    } catch (notifErr) {
+      console.error("Failed to send leave/remove notifications:", notifErr);
     }
-
-    res.json({ success: true });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Internal server error" });
