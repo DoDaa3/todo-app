@@ -44,6 +44,7 @@ export default function ProfilePage() {
   const [savingProfile, setSavingProfile] = useState(false);
   const [nameError, setNameError] = useState("");
   const [emailError, setEmailError] = useState("");
+  const [pendingEmail, setPendingEmail] = useState<string | null>(null);
 
   // Image crop
   const [cropModalOpen, setCropModalOpen] = useState(false);
@@ -118,7 +119,15 @@ export default function ProfilePage() {
       // Update auth context directly (no page reload needed)
       updateUser(res.data.user);
 
-      showToast("Profile updated", "success");
+      if (res.data.pendingEmail) {
+        setPendingEmail(res.data.pendingEmail);
+        // Reset email input to current (unchanged) email since new one needs verification
+        setEmail(res.data.user.email);
+        showToast("Verification email sent to " + res.data.pendingEmail, "success");
+      } else {
+        setPendingEmail(null);
+        showToast("Profile updated", "success");
+      }
     } catch (err: any) {
       const errorMsg = err.response?.data?.error || "Failed to update profile";
       if (errorMsg.toLowerCase().includes("name")) {
@@ -299,8 +308,17 @@ export default function ProfilePage() {
                 </svg>
                 {emailError}
               </p>
+            ) : pendingEmail ? (
+              <div className="mt-2 px-3 py-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-lg">
+                <p className="text-xs text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
+                  <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                  Verification email sent to <strong>{pendingEmail}</strong>. Check your inbox to confirm the change.
+                </p>
+              </div>
             ) : (
-              <p className="text-xs text-stone-400 dark:text-stone-500 mt-1">Changing your email may require re-verification.</p>
+              <p className="text-xs text-stone-400 dark:text-stone-500 mt-1">Changing your email requires verification from the new email.</p>
             )}
           </div>
 

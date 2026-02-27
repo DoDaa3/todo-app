@@ -57,6 +57,8 @@ model User {
   darkMode          Boolean  @default(false)
   emailVerified     Boolean  @default(false)
   verificationToken String?  @unique
+  pendingEmail      String?
+  emailChangeToken  String?  @unique
 
   boards            Board[]
   sharedBoards      BoardShare[]

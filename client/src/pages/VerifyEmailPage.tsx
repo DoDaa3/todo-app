@@ -5,6 +5,8 @@ import api from "../lib/api";
 export default function VerifyEmailPage() {
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token");
+  const type = searchParams.get("type");
+  const isEmailChange = type === "email-change";
   const [status, setStatus] = useState<"loading" | "success" | "error">(
     "loading"
   );
@@ -21,8 +23,12 @@ export default function VerifyEmailPage() {
     if (calledRef.current) return;
     calledRef.current = true;
 
+    const endpoint = isEmailChange
+      ? `/auth/verify-email-change/${token}`
+      : `/auth/verify/${token}`;
+
     api
-      .get(`/auth/verify/${token}`)
+      .get(endpoint)
       .then((res) => {
         setStatus("success");
         setMessage(res.data.message);
@@ -33,7 +39,7 @@ export default function VerifyEmailPage() {
           err.response?.data?.error || "Verification failed. Please try again."
         );
       });
-  }, [token]);
+  }, [token, isEmailChange]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-stone-100 via-brand-50 to-stone-100 dark:from-stone-950 dark:via-brand-950/20 dark:to-stone-950 px-4">
@@ -63,15 +69,15 @@ export default function VerifyEmailPage() {
               </svg>
             </div>
             <h1 className="text-xl font-bold text-stone-900 dark:text-white mb-2">
-              Email Verified!
+              {isEmailChange ? "Email Changed!" : "Email Verified!"}
             </h1>
             <p className="text-sm text-stone-500 dark:text-stone-400 mb-6">{message}</p>
             <Link
-              to="/login"
+              to={isEmailChange ? "/profile" : "/login"}
               className="inline-block px-6 py-2.5 bg-gradient-to-r from-brand-600 to-brand-700 text-white text-sm font-semibold rounded-lg
                 hover:from-brand-700 hover:to-brand-800 transition-all shadow-md shadow-brand-600/25"
             >
-              Sign In
+              {isEmailChange ? "Go to Profile" : "Sign In"}
             </Link>
           </>
         )}

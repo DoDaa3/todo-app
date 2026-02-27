@@ -52,6 +52,48 @@ export async function sendVerificationEmail(
   });
 }
 
+export async function sendEmailChangeVerification(
+  to: string,
+  name: string,
+  token: string
+) {
+  const clientUrl = process.env.CLIENT_URL || "http://localhost:5173";
+  const verifyUrl = `${clientUrl}/verify-email?token=${token}&type=email-change`;
+
+  await transporter.sendMail({
+    from: fromAddress,
+    to,
+    subject: "Confirm your new email — FlowBoard",
+    html: `
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 20px;">
+        <div style="text-align: center; margin-bottom: 32px;">
+          <div style="display: inline-block; background: linear-gradient(135deg, #8b5cf6, #6d28d9); border-radius: 12px; padding: 12px;">
+            <span style="color: white; font-size: 24px; font-weight: bold;">F</span>
+          </div>
+        </div>
+        <h1 style="font-size: 24px; font-weight: 700; color: #111827; text-align: center; margin-bottom: 8px;">
+          Confirm your new email
+        </h1>
+        <p style="color: #6b7280; text-align: center; margin-bottom: 32px;">
+          Hi ${name}, you requested to change your email address. Please confirm this new email to complete the change.
+        </p>
+        <div style="text-align: center; margin-bottom: 32px;">
+          <a href="${verifyUrl}"
+             style="display: inline-block; background: linear-gradient(135deg, #7c3aed, #6d28d9); color: white; font-weight: 600;
+                    padding: 12px 32px; border-radius: 8px; text-decoration: none; font-size: 14px;">
+            Confirm Email Address
+          </a>
+        </div>
+        <p style="color: #9ca3af; font-size: 13px; text-align: center;">
+          If you didn't request this change, you can safely ignore this email.<br/>
+          If the button doesn't work, copy and paste this link into your browser:<br/>
+          <a href="${verifyUrl}" style="color: #7c3aed; word-break: break-all;">${verifyUrl}</a>
+        </p>
+      </div>
+    `,
+  });
+}
+
 export async function sendDueDateReminderEmail(
   to: string,
   name: string,

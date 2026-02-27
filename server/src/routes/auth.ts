@@ -5,7 +5,7 @@ import jwt from "jsonwebtoken";
 import { z } from "zod";
 import prisma from "../lib/prisma";
 import { authenticate, AuthRequest } from "../middleware/auth";
-import { sendVerificationEmail } from "../lib/email";
+import { sendVerificationEmail, sendEmailChangeVerification } from "../lib/email";
 
 const router = Router();
 
@@ -118,6 +118,41 @@ router.get("/verify/:token", async (req: Request, res: Response) => {
   }
 });
 
+// Email change verification endpoint
+router.get("/verify-email-change/:token", async (req: Request, res: Response) => {
+  try {
+    const { token } = req.params;
+
+    const user = await prisma.user.findUnique({
+      where: { emailChangeToken: token },
+    });
+
+    if (!user || !user.pendingEmail) {
+      return res.status(400).json({ error: "Invalid or expired email change link" });
+    }
+
+    // Check if the pending email is still available
+    const existingEmail = await prisma.user.findUnique({ where: { email: user.pendingEmail } });
+    if (existingEmail) {
+      return res.status(409).json({ error: "This email is now taken by another account" });
+    }
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        email: user.pendingEmail,
+        pendingEmail: null,
+        emailChangeToken: null,
+      },
+    });
+
+    res.json({ message: "Email changed successfully! You can continue using your account." });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 router.post("/login", async (req: Request, res: Response) => {
   try {
     const data = loginSchema.parse(req.body);
@@ -159,7 +194,7 @@ router.get("/me", authenticate, async (req: AuthRequest, res: Response) => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.userId },
-      select: { id: true, email: true, name: true, avatarUrl: true, darkMode: true },
+      select: { id: true, email: true, name: true, avatarUrl: true, darkMode: true, pendingEmail: true },
     });
     if (!user) {
       return res.status(404).json({ error: "User not found" });
@@ -211,8 +246,10 @@ router.patch("/profile", authenticate, async (req: AuthRequest, res: Response) =
       return res.status(404).json({ error: "User not found" });
     }
 
-    if (email !== currentUser.email) {
-      const existingEmail = await prisma.user.findUnique({ where: { email } });
+    const emailChanged = email.trim() !== currentUser.email;
+
+    if (emailChanged) {
+      const existingEmail = await prisma.user.findUnique({ where: { email: email.trim() } });
       if (existingEmail) {
         return res.status(409).json({ error: "Email already in use" });
       }
@@ -225,17 +262,41 @@ router.patch("/profile", authenticate, async (req: AuthRequest, res: Response) =
       }
     }
 
-    const updated = await prisma.user.update({
+    // If email is changing, send verification to the new email instead of updating directly
+    let pendingEmail: string | null = null;
+    if (emailChanged) {
+      const emailChangeToken = crypto.randomBytes(32).toString("hex");
+      await prisma.user.update({
+        where: { id: req.userId },
+        data: {
+          name: name.trim(),
+          avatarUrl: avatarUrl || null,
+          pendingEmail: email.trim(),
+          emailChangeToken,
+        },
+      });
+      try {
+        await sendEmailChangeVerification(email.trim(), name.trim(), emailChangeToken);
+      } catch (emailErr) {
+        console.error("Failed to send email change verification:", emailErr);
+      }
+      pendingEmail = email.trim();
+    } else {
+      await prisma.user.update({
+        where: { id: req.userId },
+        data: {
+          name: name.trim(),
+          avatarUrl: avatarUrl || null,
+        },
+      });
+    }
+
+    const updated = await prisma.user.findUnique({
       where: { id: req.userId },
-      data: {
-        name: name.trim(),
-        email: email.trim(),
-        avatarUrl: avatarUrl || null,
-      },
       select: { id: true, email: true, name: true, avatarUrl: true },
     });
 
-    res.json({ user: updated });
+    res.json({ user: updated, pendingEmail });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Internal server error" });
