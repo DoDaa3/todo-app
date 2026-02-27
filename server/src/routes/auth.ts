@@ -200,6 +200,10 @@ router.patch("/profile", authenticate, async (req: AuthRequest, res: Response) =
     if (!email || typeof email !== "string") {
       return res.status(400).json({ error: "Email is required" });
     }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    if (!emailRegex.test(email.trim())) {
+      return res.status(400).json({ error: "Please enter a valid email address" });
+    }
 
     // Check if email is changing and already in use
     const currentUser = await prisma.user.findUnique({ where: { id: req.userId } });

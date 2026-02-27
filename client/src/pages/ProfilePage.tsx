@@ -102,6 +102,11 @@ export default function ProfilePage() {
       setNameError("Name is required");
       return;
     }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    if (!email.trim() || !emailRegex.test(email.trim())) {
+      setEmailError("Please enter a valid email address");
+      return;
+    }
     setSavingProfile(true);
     try {
       const res = await api.patch("/auth/profile", {
