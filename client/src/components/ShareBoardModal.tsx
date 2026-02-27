@@ -37,7 +37,10 @@ const roleBadge: Record<"OWNER" | "ADMIN" | "EDITOR" | "VIEWER", string> = {
   VIEWER: "bg-stone-100 text-stone-600 dark:bg-stone-800 dark:text-stone-400",
 };
 
-function Avatar({ name, color }: { name: string; color: "brand" | "stone" }) {
+function Avatar({ name, avatarUrl, color }: { name: string; avatarUrl?: string | null; color: "brand" | "stone" }) {
+  if (avatarUrl) {
+    return <img src={avatarUrl} alt={name} className="w-8 h-8 rounded-full object-cover shrink-0" />;
+  }
   const cls =
     color === "brand"
       ? "bg-brand-100 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300"
@@ -229,7 +232,7 @@ export default function ShareBoardModal({
               {owner && (
                 <div className="flex items-center justify-between px-2 py-2 rounded-xl">
                   <div className="flex items-center gap-3">
-                    <Avatar name={owner.name} color="brand" />
+                    <Avatar name={owner.name} avatarUrl={owner.avatarUrl} color="brand" />
                     <div>
                       <p className="text-sm font-medium text-stone-900 dark:text-stone-100 leading-tight">
                         {owner.name}
@@ -255,7 +258,7 @@ export default function ShareBoardModal({
                       isMe ? "bg-stone-50 dark:bg-stone-800/50" : "hover:bg-stone-50 dark:hover:bg-stone-800/30"
                     }`}>
                       <div className="flex items-center gap-3 min-w-0">
-                        <Avatar name={share.user.name} color="stone" />
+                        <Avatar name={share.user.name} avatarUrl={share.user.avatarUrl} color="stone" />
                         <div className="min-w-0">
                           <p className="text-sm font-medium text-stone-900 dark:text-stone-100 leading-tight truncate">
                             {share.user.name}
