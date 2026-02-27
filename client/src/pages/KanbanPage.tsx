@@ -395,6 +395,24 @@ export default function KanbanPage() {
   function handleTaskUpdated(updatedTask: Task) {
     setBoard((prev) => {
       if (!prev) return prev;
+      // Check if the task moved to a different column (status change)
+      const oldCol = prev.columns.find((col) => col.tasks.some((t) => t.id === updatedTask.id));
+      if (oldCol && oldCol.id !== updatedTask.columnId) {
+        // Task moved columns: remove from old, add to new
+        return {
+          ...prev,
+          columns: prev.columns.map((col) => {
+            if (col.id === oldCol.id) {
+              return { ...col, tasks: col.tasks.filter((t) => t.id !== updatedTask.id) };
+            }
+            if (col.id === updatedTask.columnId) {
+              return { ...col, tasks: [updatedTask, ...col.tasks] };
+            }
+            return col;
+          }),
+        };
+      }
+      // Same column: just update in place
       return {
         ...prev,
         columns: prev.columns.map((col) => ({
@@ -524,6 +542,7 @@ export default function KanbanPage() {
         open={detailOpen}
         task={detailTask}
         canEdit={canEdit}
+        columns={board.columns}
         onClose={() => setDetailOpen(false)}
         onTaskUpdated={handleTaskUpdated}
       />

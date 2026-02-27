@@ -159,12 +159,136 @@ router.get("/me", authenticate, async (req: AuthRequest, res: Response) => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.userId },
-      select: { id: true, email: true, name: true },
+      select: { id: true, email: true, name: true, avatarUrl: true, darkMode: true },
     });
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
     res.json({ user });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Update dark mode preference
+router.patch("/me", authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const { darkMode } = req.body;
+    if (typeof darkMode !== "boolean") {
+      return res.status(400).json({ error: "Invalid darkMode value" });
+    }
+    await prisma.user.update({
+      where: { id: req.userId },
+      data: { darkMode },
+    });
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Update profile (name, email, avatar)
+router.patch("/profile", authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const { name, email, avatarUrl } = req.body;
+
+    if (!name || typeof name !== "string" || name.trim().length === 0) {
+      return res.status(400).json({ error: "Name is required" });
+    }
+    if (!email || typeof email !== "string") {
+      return res.status(400).json({ error: "Email is required" });
+    }
+
+    // Check if email is changing and already in use
+    const currentUser = await prisma.user.findUnique({ where: { id: req.userId } });
+    if (!currentUser) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    if (email !== currentUser.email) {
+      const existing = await prisma.user.findUnique({ where: { email } });
+      if (existing) {
+        return res.status(409).json({ error: "Email already in use" });
+      }
+    }
+
+    const updated = await prisma.user.update({
+      where: { id: req.userId },
+      data: {
+        name: name.trim(),
+        email: email.trim(),
+        avatarUrl: avatarUrl || null,
+      },
+      select: { id: true, email: true, name: true, avatarUrl: true },
+    });
+
+    res.json({ user: updated });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Change password
+router.patch("/password", authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: "Both current and new password are required" });
+    }
+    if (typeof newPassword !== "string" || newPassword.length < 8) {
+      return res.status(400).json({ error: "New password must be at least 8 characters" });
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: req.userId } });
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const valid = await bcrypt.compare(currentPassword, user.password);
+    if (!valid) {
+      return res.status(401).json({ error: "Current password is incorrect" });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await prisma.user.update({
+      where: { id: req.userId },
+      data: { password: hashedPassword },
+    });
+
+    res.json({ message: "Password changed successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Delete account
+router.delete("/account", authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const { password } = req.body;
+
+    if (!password) {
+      return res.status(400).json({ error: "Password is required" });
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: req.userId } });
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const valid = await bcrypt.compare(password, user.password);
+    if (!valid) {
+      return res.status(401).json({ error: "Incorrect password" });
+    }
+
+    // Delete user and all related data (cascading deletes handled by Prisma schema)
+    await prisma.user.delete({ where: { id: req.userId } });
+
+    res.json({ message: "Account deleted" });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Internal server error" });

@@ -20,6 +20,10 @@ function getInitialDarkMode(): boolean {
   if (stored !== null) {
     return stored === "true";
   }
+  // Auto-detect system preference
+  if (typeof window !== "undefined" && window.matchMedia) {
+    return window.matchMedia("(prefers-color-scheme: dark)").matches;
+  }
   return false;
 }
 
@@ -34,6 +38,19 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       document.documentElement.classList.remove("dark");
     }
   }, [darkMode]);
+
+  // Listen for system preference changes (only when user hasn't set a manual preference)
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    function handleChange(e: MediaQueryListEvent) {
+      const stored = localStorage.getItem("darkMode");
+      if (stored === null) {
+        setDarkMode(e.matches);
+      }
+    }
+    mediaQuery.addEventListener("change", handleChange);
+    return () => mediaQuery.removeEventListener("change", handleChange);
+  }, []);
 
   const toggleDarkMode = useCallback(() => {
     setDarkMode((prev) => {

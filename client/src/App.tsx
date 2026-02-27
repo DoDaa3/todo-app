@@ -7,6 +7,7 @@ import SignupPage from "./pages/SignupPage";
 import VerifyEmailPage from "./pages/VerifyEmailPage";
 import BoardsPage from "./pages/BoardsPage";
 import KanbanPage from "./pages/KanbanPage";
+import ProfilePage from "./pages/ProfilePage";
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -78,6 +79,14 @@ function AppRoutes() {
         element={
           <PrivateRoute>
             <KanbanPage />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          <PrivateRoute>
+            <ProfilePage />
           </PrivateRoute>
         }
       />

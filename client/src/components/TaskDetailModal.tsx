@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Task, Priority, Subtask, Comment } from "../types";
+import { Task, Priority, Subtask, Comment, Column } from "../types";
 import api from "../lib/api";
 import { useToast } from "./Toast";
 import { formatDate as formatDateUtil } from "../lib/date";
@@ -8,6 +8,7 @@ interface TaskDetailModalProps {
   open: boolean;
   task: Task | null;
   canEdit?: boolean;
+  columns?: Column[];
   onClose: () => void;
   onTaskUpdated: (task: Task) => void;
 }
@@ -26,7 +27,7 @@ const priorityStyle: Record<Priority, string> = {
   URGENT: "bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-300",
 };
 
-export default function TaskDetailModal({ open, task, canEdit = true, onClose, onTaskUpdated }: TaskDetailModalProps) {
+export default function TaskDetailModal({ open, task, canEdit = true, columns = [], onClose, onTaskUpdated }: TaskDetailModalProps) {
   const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState<"details" | "subtasks" | "comments">("details");
 
@@ -35,7 +36,9 @@ export default function TaskDetailModal({ open, task, canEdit = true, onClose, o
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState<Priority>("MEDIUM");
   const [dueDate, setDueDate] = useState("");
+  const [selectedColumnId, setSelectedColumnId] = useState("");
   const [saving, setSaving] = useState(false);
+  const [movingStatus, setMovingStatus] = useState(false);
 
   // Subtasks
   const [subtasks, setSubtasks] = useState<Subtask[]>([]);
@@ -78,6 +81,7 @@ export default function TaskDetailModal({ open, task, canEdit = true, onClose, o
       setDescription(task.description || "");
       setPriority(task.priority || "MEDIUM");
       setDueDate(task.dueDate ? new Date(task.dueDate).toISOString().slice(0, 10) : "");
+      setSelectedColumnId(task.columnId || "");
       loadSubtasks(task.id);
       loadComments(task.id);
       setActiveTab("details");
@@ -101,6 +105,26 @@ export default function TaskDetailModal({ open, task, canEdit = true, onClose, o
       showToast("Failed to update task", "error");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleStatusChange(newColumnId: string) {
+    if (newColumnId === task!.columnId) return;
+    setMovingStatus(true);
+    try {
+      await api.patch(`/tasks/${task!.id}/move`, {
+        columnId: newColumnId,
+        position: 0,
+      });
+      const updatedTask = { ...task!, columnId: newColumnId };
+      setSelectedColumnId(newColumnId);
+      onTaskUpdated(updatedTask);
+      showToast("Status updated", "success");
+    } catch {
+      showToast("Failed to change status", "error");
+      setSelectedColumnId(task!.columnId);
+    } finally {
+      setMovingStatus(false);
     }
   }
 
@@ -156,6 +180,8 @@ export default function TaskDetailModal({ open, task, canEdit = true, onClose, o
   const completedSubtasks = subtasks.filter((s) => s.completed).length;
   const subtaskProgress = subtasks.length > 0 ? (completedSubtasks / subtasks.length) * 100 : 0;
 
+  const currentColumn = columns.find((c) => c.id === selectedColumnId);
+
   const tabs = [
     { key: "details" as const, label: "Details" },
     { key: "subtasks" as const, label: `Subtasks${subtasks.length ? ` (${completedSubtasks}/${subtasks.length})` : ""}` },
@@ -178,6 +204,42 @@ export default function TaskDetailModal({ open, task, canEdit = true, onClose, o
             </svg>
           </button>
         </div>
+
+        {/* Status bar - quick status change */}
+        {columns.length > 0 && (
+          <div className="px-5 py-3 border-b border-stone-100 dark:border-stone-800 bg-stone-50/50 dark:bg-stone-800/30">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium text-stone-500 dark:text-stone-400 uppercase tracking-wider shrink-0">
+                Status
+              </span>
+              {canEdit ? (
+                <div className="flex flex-wrap gap-1.5">
+                  {columns.map((col) => {
+                    const isActive = col.id === selectedColumnId;
+                    return (
+                      <button
+                        key={col.id}
+                        onClick={() => handleStatusChange(col.id)}
+                        disabled={movingStatus}
+                        className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${
+                          isActive
+                            ? "bg-brand-600 text-white shadow-sm"
+                            : "bg-white dark:bg-stone-800 text-stone-600 dark:text-stone-400 border border-stone-200 dark:border-stone-700 hover:border-brand-300 dark:hover:border-brand-700 hover:text-brand-600 dark:hover:text-brand-400"
+                        } ${movingStatus ? "opacity-60 cursor-not-allowed" : ""}`}
+                      >
+                        {col.title}
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <span className="px-3 py-1.5 text-xs font-medium rounded-lg bg-brand-600 text-white">
+                  {currentColumn?.title || "Unknown"}
+                </span>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Tabs */}
         <div className="flex border-b border-stone-100 dark:border-stone-800 px-5">
