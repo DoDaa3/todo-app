@@ -441,9 +441,9 @@ export default function KanbanPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-stone-50 to-stone-100 dark:from-stone-950 dark:to-stone-900 flex flex-col">
       <Navbar onSearchOpen={() => setSearchOpen(true)} />
-      <div className="px-4 sm:px-6 lg:px-8 py-4 border-b border-stone-200/60 dark:border-stone-800/60 bg-white/80 dark:bg-stone-900/80 backdrop-blur-sm">
-        <div className="max-w-full mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div className="flex items-center gap-3">
+      <div className="px-4 sm:px-6 lg:px-8 py-3 sm:py-4 border-b border-stone-200/60 dark:border-stone-800/60 bg-white/80 dark:bg-stone-900/80 backdrop-blur-sm">
+        <div className="max-w-full mx-auto flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
             <button
               onClick={() => navigate("/")}
               className="p-1.5 text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
@@ -462,11 +462,11 @@ export default function KanbanPage() {
                 />
               </svg>
             </button>
-            <h1 className="text-xl font-bold text-stone-900 dark:text-white">{board.title}</h1>
+            <h1 className="text-lg sm:text-xl font-bold text-stone-900 dark:text-white truncate max-w-[150px] sm:max-w-none">{board.title}</h1>
             <ViewSwitcher active={viewMode} onChange={setViewMode} />
             <button
               onClick={() => setShareOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-brand-700 dark:text-brand-300
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-sm font-medium text-brand-700 dark:text-brand-300
                 bg-brand-50 dark:bg-brand-900/30 border border-brand-200 dark:border-brand-800
                 rounded-lg hover:bg-brand-100 dark:hover:bg-brand-900/50 transition-colors"
             >
@@ -477,7 +477,7 @@ export default function KanbanPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
                 )}
               </svg>
-              {canEdit ? "Share" : "People"}
+              <span className="hidden sm:inline">{canEdit ? "Share" : "People"}</span>
             </button>
           </div>
           <FilterBar
@@ -489,10 +489,10 @@ export default function KanbanPage() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-x-auto p-4 sm:p-6">
+      <div className="flex-1 overflow-x-auto p-3 sm:p-4 lg:p-6">
         {viewMode === "kanban" && (
           <DragDropContext onDragEnd={canEdit ? handleDragEnd : () => {}}>
-            <div className="flex flex-col sm:flex-row gap-4 sm:gap-5 min-h-0">
+            <div className="flex flex-col sm:flex-row gap-4 sm:gap-5 min-h-0 sm:items-start">
               {filteredColumns.map((column) => (
                 <BoardColumn
                   key={column.id}

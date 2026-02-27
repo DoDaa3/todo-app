@@ -16,7 +16,7 @@ export default function FilterBar({
   onDueDateChange,
 }: FilterBarProps) {
   return (
-    <div className="flex flex-wrap items-center gap-3">
+    <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2 sm:gap-3">
       <div className="flex items-center gap-2">
         <span className="text-xs font-medium text-stone-500 dark:text-stone-400 uppercase tracking-wide">
           Priority:

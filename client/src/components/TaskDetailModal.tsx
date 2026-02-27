@@ -191,9 +191,9 @@ export default function TaskDetailModal({ open, task, canEdit = true, columns = 
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white dark:bg-stone-900 rounded-xl shadow-2xl w-full max-w-lg max-h-[85vh] flex flex-col">
+      <div className="relative bg-white dark:bg-stone-900 rounded-t-xl sm:rounded-xl shadow-2xl w-full sm:max-w-lg max-h-[92vh] sm:max-h-[85vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-stone-100 dark:border-stone-800">
           <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">Task Details</h2>
@@ -286,7 +286,7 @@ export default function TaskDetailModal({ open, task, canEdit = true, columns = 
                         focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-transparent resize-none"
                     />
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">Priority</label>
                       <select
@@ -334,7 +334,7 @@ export default function TaskDetailModal({ open, task, canEdit = true, columns = 
                       {description || <span className="text-stone-400 italic">No description</span>}
                     </p>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-medium text-stone-500 dark:text-stone-400 uppercase tracking-wider mb-1">Priority</label>
                       <span className={`inline-block text-xs font-bold uppercase px-2.5 py-1 rounded-md ${priorityStyle[priority]}`}>

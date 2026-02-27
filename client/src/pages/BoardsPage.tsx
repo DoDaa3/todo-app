@@ -105,10 +105,10 @@ export default function BoardsPage() {
   return (
     <div className="min-h-screen bg-stone-50 dark:bg-stone-950">
       <Navbar onSearchOpen={() => setSearchOpen(true)} />
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex items-center justify-between mb-8">
+      <div className="max-w-4xl 2xl:max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
           <div>
-            <h1 className="text-2xl font-bold text-stone-900 dark:text-white">My Boards</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-stone-900 dark:text-white">My Boards</h1>
             <p className="text-sm text-stone-500 dark:text-stone-400 mt-1">Manage and organize your projects</p>
           </div>
           <button
@@ -136,7 +136,7 @@ export default function BoardsPage() {
         {creating && (
           <form
             onSubmit={handleCreate}
-            className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200/80 dark:border-stone-800 p-4 mb-6 flex gap-3 shadow-sm"
+            className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200/80 dark:border-stone-800 p-4 mb-6 flex flex-col sm:flex-row gap-3 shadow-sm"
           >
             <input
               type="text"
@@ -199,7 +199,7 @@ export default function BoardsPage() {
         ) : (
           <>
             {boards.length > 0 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4">
                 {boards.map((board, i) => (
                   <div
                     key={board.id}
@@ -224,7 +224,7 @@ export default function BoardsPage() {
                             setDeleteConfirm({ open: true, boardId: board.id });
                           }}
                           className="p-1.5 text-stone-300 dark:text-stone-600 hover:text-red-500 dark:hover:text-red-400 rounded-lg transition-colors
-                            opacity-0 group-hover:opacity-100"
+                            sm:opacity-0 sm:group-hover:opacity-100"
                           title="Delete board"
                         >
                           <svg
@@ -270,7 +270,7 @@ export default function BoardsPage() {
                   <h2 className="text-lg font-semibold text-stone-900 dark:text-white">Shared with me</h2>
                   <p className="text-sm text-stone-500 dark:text-stone-400 mt-1">Boards others have shared with you</p>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4">
                   {sharedBoards.map((board, i) => (
                     <div
                       key={board.id}

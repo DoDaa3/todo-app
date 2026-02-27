@@ -63,8 +63,8 @@ export default function CalendarView({ columns, onEditTask }: CalendarViewProps)
   return (
     <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-800 overflow-hidden shadow-sm">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-stone-200 dark:border-stone-800">
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3 border-b border-stone-200 dark:border-stone-800">
+        <div className="flex items-center gap-1.5 sm:gap-2">
           <button
             onClick={prev}
             className="p-1.5 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 text-stone-500 dark:text-stone-400 transition-colors"
@@ -96,8 +96,9 @@ export default function CalendarView({ columns, onEditTask }: CalendarViewProps)
       {/* Day headers */}
       <div className="grid grid-cols-7 border-b border-stone-200 dark:border-stone-800">
         {DAYS.map((day) => (
-          <div key={day} className="text-center text-xs font-semibold text-stone-500 dark:text-stone-400 py-2">
-            {day}
+          <div key={day} className="text-center text-[10px] sm:text-xs font-semibold text-stone-500 dark:text-stone-400 py-1.5 sm:py-2">
+            <span className="sm:hidden">{day.charAt(0)}</span>
+            <span className="hidden sm:inline">{day}</span>
           </div>
         ))}
       </div>
@@ -106,7 +107,7 @@ export default function CalendarView({ columns, onEditTask }: CalendarViewProps)
       <div className="grid grid-cols-7">
         {cells.map((day, i) => {
           if (day === null) {
-            return <div key={`empty-${i}`} className="min-h-[100px] bg-stone-50/50 dark:bg-stone-900/50 border-b border-r border-stone-100 dark:border-stone-800/50" />;
+            return <div key={`empty-${i}`} className="min-h-[60px] sm:min-h-[80px] lg:min-h-[100px] bg-stone-50/50 dark:bg-stone-900/50 border-b border-r border-stone-100 dark:border-stone-800/50" />;
           }
           const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
           const isToday = dateStr === todayStr;
@@ -115,7 +116,7 @@ export default function CalendarView({ columns, onEditTask }: CalendarViewProps)
           return (
             <div
               key={dateStr}
-              className={`min-h-[100px] border-b border-r border-stone-100 dark:border-stone-800/50 p-1.5 ${
+              className={`min-h-[60px] sm:min-h-[80px] lg:min-h-[100px] border-b border-r border-stone-100 dark:border-stone-800/50 p-1 sm:p-1.5 ${
                 isToday ? "bg-brand-50/50 dark:bg-brand-900/10" : "hover:bg-stone-50 dark:hover:bg-stone-800/20"
               } transition-colors`}
             >
@@ -129,7 +130,7 @@ export default function CalendarView({ columns, onEditTask }: CalendarViewProps)
                 {day}
               </span>
               <div className="space-y-0.5">
-                {dayTasks.slice(0, 3).map((task) => (
+                {dayTasks.slice(0, 2).map((task) => (
                   <button
                     key={task.id}
                     onClick={() => onEditTask(task)}
@@ -140,9 +141,9 @@ export default function CalendarView({ columns, onEditTask }: CalendarViewProps)
                     <span className="truncate">{task.title}</span>
                   </button>
                 ))}
-                {dayTasks.length > 3 && (
+                {dayTasks.length > 2 && (
                   <span className="text-[10px] text-stone-400 dark:text-stone-500 px-1.5">
-                    +{dayTasks.length - 3} more
+                    +{dayTasks.length - 2} more
                   </span>
                 )}
               </div>

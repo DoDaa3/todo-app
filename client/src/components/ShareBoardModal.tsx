@@ -153,12 +153,12 @@ export default function ShareBoardModal({
   const myShare = shares.find((s) => s.user.id === currentUserId);
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center sm:p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white dark:bg-stone-900 rounded-2xl shadow-2xl w-full max-w-md animate-in fade-in zoom-in-95">
+      <div className="relative bg-white dark:bg-stone-900 rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-md max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-6 pt-6 pb-4">
+        <div className="flex items-center justify-between px-4 sm:px-6 pt-5 sm:pt-6 pb-3 sm:pb-4">
           <div>
             <h2 className="text-lg font-semibold text-stone-900 dark:text-white">Share Board</h2>
             <p className="text-xs text-stone-400 dark:text-stone-500 mt-0.5">
@@ -177,11 +177,11 @@ export default function ShareBoardModal({
 
         {/* Invite form — only for managers */}
         {isManager && (
-          <form onSubmit={handleInvite} className="px-6 pb-4 border-b border-stone-200 dark:border-stone-800">
+          <form onSubmit={handleInvite} className="px-4 sm:px-6 pb-4 border-b border-stone-200 dark:border-stone-800">
             <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2">
               Invite by email
             </label>
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <input
                 type="email"
                 value={email}
@@ -217,7 +217,7 @@ export default function ShareBoardModal({
         )}
 
         {/* People list */}
-        <div className="px-6 py-4 max-h-80 overflow-y-auto">
+        <div className="px-4 sm:px-6 py-4 max-h-64 sm:max-h-80 overflow-y-auto">
           <p className="text-xs font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-wider mb-3">
             People with access
           </p>
@@ -385,7 +385,7 @@ export default function ShareBoardModal({
 
         {/* Footer hint for non-managers */}
         {!isManager && myShare && (
-          <div className="px-6 pb-5">
+          <div className="px-4 sm:px-6 pb-4 sm:pb-5">
             <p className="text-xs text-stone-400 dark:text-stone-500 text-center">
               Contact the board owner to change your access level.
             </p>

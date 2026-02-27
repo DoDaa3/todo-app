@@ -61,7 +61,7 @@ export default function BoardColumn({
   return (
     <div
       className={`flex flex-col bg-white dark:bg-stone-900 rounded-2xl border border-stone-200/80 dark:border-stone-800 border-t-4 ${accent.border}
-        w-full sm:w-80 shrink-0 max-h-[calc(100vh-10rem)] shadow-sm dark:shadow-stone-950/50`}
+        w-full sm:w-72 md:w-76 lg:w-80 xl:w-80 shrink-0 max-h-[70vh] sm:max-h-[calc(100vh-10rem)] shadow-sm dark:shadow-stone-950/50`}
     >
       <div className={`flex items-center justify-between px-4 py-3.5 ${accent.bg} rounded-t-xl`}>
         <div className="flex items-center gap-2.5">

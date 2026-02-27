@@ -84,12 +84,12 @@ export default function TaskModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
       <div
         className="absolute inset-0 bg-black/40 backdrop-blur-sm"
         onClick={onClose}
       />
-      <div className="relative bg-white dark:bg-stone-900 rounded-xl shadow-2xl w-full max-w-md animate-in fade-in zoom-in-95">
+      <div className="relative bg-white dark:bg-stone-900 rounded-t-xl sm:rounded-xl shadow-2xl w-full sm:max-w-md max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95">
         <div className="flex items-center justify-between p-5 border-b border-stone-100 dark:border-stone-800">
           <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
             {isEditing ? "Edit Task" : "New Task"}
@@ -144,7 +144,7 @@ export default function TaskModal({
                 placeholder:text-stone-400 resize-none"
             />
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">
                 Priority

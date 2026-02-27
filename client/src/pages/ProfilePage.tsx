@@ -194,9 +194,9 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-stone-50 dark:bg-stone-950">
       <Navbar />
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         {/* Header */}
-        <div className="flex items-center gap-3 mb-8">
+        <div className="flex items-center gap-3 mb-6 sm:mb-8">
           <button
             onClick={() => navigate(-1)}
             className="p-1.5 text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
@@ -206,26 +206,26 @@ export default function ProfilePage() {
             </svg>
           </button>
           <div>
-            <h1 className="text-2xl font-bold text-stone-900 dark:text-white">Profile Settings</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-stone-900 dark:text-white">Profile Settings</h1>
             <p className="text-sm text-stone-500 dark:text-stone-400 mt-0.5">Manage your account information</p>
           </div>
         </div>
 
         {/* Profile Information */}
-        <form onSubmit={handleSaveProfile} className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200/80 dark:border-stone-800 p-6 mb-6">
-          <h2 className="text-lg font-semibold text-stone-900 dark:text-white mb-5">Profile Information</h2>
+        <form onSubmit={handleSaveProfile} className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200/80 dark:border-stone-800 p-4 sm:p-6 mb-4 sm:mb-6">
+          <h2 className="text-lg font-semibold text-stone-900 dark:text-white mb-4 sm:mb-5">Profile Information</h2>
 
           {/* Avatar */}
-          <div className="flex items-center gap-5 mb-6">
+          <div className="flex items-center gap-4 sm:gap-5 mb-6">
             <div className="relative group">
               {avatarPreview ? (
                 <img
                   src={avatarPreview}
                   alt="Avatar"
-                  className="w-20 h-20 rounded-full object-cover border-2 border-stone-200 dark:border-stone-700"
+                  className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border-2 border-stone-200 dark:border-stone-700"
                 />
               ) : (
-                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center text-white text-2xl font-bold">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center text-white text-xl sm:text-2xl font-bold">
                   {user.name?.charAt(0)?.toUpperCase() || "U"}
                 </div>
               )}
@@ -336,7 +336,7 @@ export default function ProfilePage() {
         </form>
 
         {/* Change Password */}
-        <form onSubmit={handleChangePassword} className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200/80 dark:border-stone-800 p-6 mb-6">
+        <form onSubmit={handleChangePassword} className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200/80 dark:border-stone-800 p-4 sm:p-6 mb-4 sm:mb-6">
           <h2 className="text-lg font-semibold text-stone-900 dark:text-white mb-5">Change Password</h2>
 
           <div className="mb-4">
@@ -462,7 +462,7 @@ export default function ProfilePage() {
         </form>
 
         {/* Danger Zone */}
-        <div className="bg-white dark:bg-stone-900 rounded-xl border border-red-200 dark:border-red-900/50 p-6">
+        <div className="bg-white dark:bg-stone-900 rounded-xl border border-red-200 dark:border-red-900/50 p-4 sm:p-6">
           <h2 className="text-lg font-semibold text-red-600 dark:text-red-400 mb-2">Danger Zone</h2>
           <p className="text-sm text-stone-500 dark:text-stone-400 mb-4">
             Once you delete your account, there is no going back. All your boards, tasks, and data will be permanently removed.

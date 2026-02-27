@@ -86,24 +86,24 @@ export default function ListView({
                 Task <SortIcon col="title" />
               </th>
               <th
-                className="text-left px-4 py-3 font-semibold text-stone-600 dark:text-stone-300 cursor-pointer select-none hover:bg-stone-100 dark:hover:bg-stone-800/50 w-28"
+                className="hidden sm:table-cell text-left px-4 py-3 font-semibold text-stone-600 dark:text-stone-300 cursor-pointer select-none hover:bg-stone-100 dark:hover:bg-stone-800/50 w-28"
                 onClick={() => toggleSort("status")}
               >
                 Status <SortIcon col="status" />
               </th>
               <th
-                className="text-left px-4 py-3 font-semibold text-stone-600 dark:text-stone-300 cursor-pointer select-none hover:bg-stone-100 dark:hover:bg-stone-800/50 w-28"
+                className="text-left px-3 sm:px-4 py-3 font-semibold text-stone-600 dark:text-stone-300 cursor-pointer select-none hover:bg-stone-100 dark:hover:bg-stone-800/50 w-24 sm:w-28"
                 onClick={() => toggleSort("priority")}
               >
                 Priority <SortIcon col="priority" />
               </th>
               <th
-                className="text-left px-4 py-3 font-semibold text-stone-600 dark:text-stone-300 cursor-pointer select-none hover:bg-stone-100 dark:hover:bg-stone-800/50 w-36"
+                className="hidden md:table-cell text-left px-4 py-3 font-semibold text-stone-600 dark:text-stone-300 cursor-pointer select-none hover:bg-stone-100 dark:hover:bg-stone-800/50 w-36"
                 onClick={() => toggleSort("dueDate")}
               >
                 Due Date <SortIcon col="dueDate" />
               </th>
-              <th className="w-20 px-4 py-3"></th>
+              <th className="w-16 sm:w-20 px-2 sm:px-4 py-3"></th>
             </tr>
           </thead>
           <tbody>
@@ -128,29 +128,33 @@ export default function ListView({
                 className="border-b border-stone-100 dark:border-stone-800/50 hover:bg-stone-50 dark:hover:bg-stone-800/30 transition-colors cursor-pointer"
                 onClick={() => onEditTask(task)}
               >
-                <td className="px-4 py-3">
-                  <div className="font-medium text-stone-900 dark:text-stone-100">{task.title}</div>
+                <td className="px-3 sm:px-4 py-3">
+                  <div className="font-medium text-stone-900 dark:text-stone-100 text-sm">{task.title}</div>
                   {task.description && (
                     <div className="text-xs text-stone-400 dark:text-stone-500 mt-0.5 line-clamp-1">{task.description}</div>
                   )}
+                  {/* Show status inline on mobile since column is hidden */}
+                  <span className="sm:hidden inline-block text-[10px] font-medium px-1.5 py-0.5 rounded bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 mt-1">
+                    {task.columnTitle}
+                  </span>
                 </td>
-                <td className="px-4 py-3">
+                <td className="hidden sm:table-cell px-4 py-3">
                   <span className="inline-block text-xs font-medium px-2 py-1 rounded-md bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300">
                     {task.columnTitle}
                   </span>
                 </td>
-                <td className="px-4 py-3">
+                <td className="px-3 sm:px-4 py-3">
                   <span className={`inline-block text-xs font-bold uppercase px-2 py-1 rounded-md ${priorityStyle[task.priority]}`}>
                     {task.priority}
                   </span>
                 </td>
-                <td className="px-4 py-3">
+                <td className="hidden md:table-cell px-4 py-3">
                   <span className={`text-xs ${isOverdue(task.dueDate) ? "text-red-500 font-semibold" : "text-stone-500 dark:text-stone-400"}`}>
                     {formatDate(task.dueDate)}
                   </span>
                 </td>
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-1">
+                <td className="px-2 sm:px-4 py-3">
+                  <div className="flex items-center gap-0.5 sm:gap-1">
                     <button
                       onClick={(e) => { e.stopPropagation(); onEditTask(task); }}
                       className="p-1.5 text-stone-400 hover:text-brand-600 rounded-lg transition-colors"

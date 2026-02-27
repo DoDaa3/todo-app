@@ -35,7 +35,7 @@ export default function ViewSwitcher({ active, onChange }: ViewSwitcherProps) {
         <button
           key={view.key}
           onClick={() => onChange(view.key)}
-          className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-md transition-all ${
+          className={`flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2.5 py-1.5 text-xs font-medium rounded-md transition-all ${
             active === view.key
               ? "bg-white dark:bg-stone-700 text-stone-900 dark:text-stone-100 shadow-sm"
               : "text-stone-500 dark:text-stone-400 hover:text-stone-700 dark:hover:text-stone-200"

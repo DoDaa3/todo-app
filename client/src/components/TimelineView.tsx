@@ -74,10 +74,10 @@ export default function TimelineView({ columns, onEditTask }: TimelineViewProps)
   return (
     <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-800 overflow-hidden shadow-sm">
       <div className="overflow-x-auto">
-        <div className="min-w-[800px]">
+        <div className="min-w-[500px] sm:min-w-[600px] lg:min-w-[800px]">
           {/* Header with date markers */}
           <div className="flex border-b border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-900/80 relative h-8">
-            <div className="w-52 shrink-0 px-4 flex items-center">
+            <div className="w-32 sm:w-40 lg:w-52 shrink-0 px-3 sm:px-4 flex items-center">
               <span className="text-xs font-semibold text-stone-500 dark:text-stone-400">Task</span>
             </div>
             <div className="flex-1 relative">
@@ -106,7 +106,7 @@ export default function TimelineView({ columns, onEditTask }: TimelineViewProps)
                 key={task.id}
                 className="flex items-center border-b border-stone-100 dark:border-stone-800/50 hover:bg-stone-50 dark:hover:bg-stone-800/20 transition-colors h-10"
               >
-                <div className="w-52 shrink-0 px-4">
+                <div className="w-32 sm:w-40 lg:w-52 shrink-0 px-3 sm:px-4">
                   <button
                     onClick={() => onEditTask(task)}
                     className="text-xs font-medium text-stone-900 dark:text-stone-100 truncate block max-w-full text-left hover:text-brand-600 dark:hover:text-brand-400 transition-colors"

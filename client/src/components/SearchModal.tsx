@@ -81,7 +81,7 @@ export default function SearchModal({ open, onClose }: SearchModalProps) {
   const noResults = results && !hasResults && query.trim();
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-start justify-center pt-[15vh] p-4">
+    <div className="fixed inset-0 z-[60] flex items-start justify-center pt-[8vh] sm:pt-[15vh] p-3 sm:p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
       <div className="relative bg-white dark:bg-stone-900 rounded-xl shadow-2xl w-full max-w-lg overflow-hidden">
         {/* Search input */}
@@ -104,7 +104,7 @@ export default function SearchModal({ open, onClose }: SearchModalProps) {
         </div>
 
         {/* Results */}
-        <div className="max-h-[50vh] overflow-y-auto">
+        <div className="max-h-[60vh] sm:max-h-[50vh] overflow-y-auto">
           {loading && (
             <div className="flex justify-center py-8">
               <div className="w-5 h-5 border-2 border-brand-200 border-t-brand-600 rounded-full animate-spin" />

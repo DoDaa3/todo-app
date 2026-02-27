@@ -33,8 +33,8 @@ export default function Navbar({ onSearchOpen }: NavbarProps) {
     <nav className="bg-white/80 dark:bg-stone-900/80 backdrop-blur-xl border-b border-stone-200/60 dark:border-stone-800/60 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-14 items-center">
-          <div className="flex items-center gap-6">
-            <Link to="/" className="flex items-center gap-2.5 group">
+          <div className="flex items-center gap-3 sm:gap-6">
+            <Link to="/" className="flex items-center gap-2 sm:gap-2.5 group">
               <div className="w-8 h-8 bg-gradient-to-br from-brand-500 to-brand-700 rounded-lg flex items-center justify-center shadow-md shadow-brand-500/25 group-hover:shadow-brand-500/40 transition-shadow">
                 <svg
                   className="w-4.5 h-4.5 text-white"
@@ -51,14 +51,14 @@ export default function Navbar({ onSearchOpen }: NavbarProps) {
                   <rect x="3" y="16" width="7" height="5" rx="1.5" />
                 </svg>
               </div>
-              <span className="font-bold text-lg tracking-tight text-stone-900 dark:text-white">
+              <span className="font-bold text-base sm:text-lg tracking-tight text-stone-900 dark:text-white">
                 Flow<span className="text-brand-600 dark:text-brand-400">Board</span>
               </span>
             </Link>
             {user && (
               <Link
                 to="/"
-                className={`text-sm font-medium transition-colors ${
+                className={`hidden sm:inline text-sm font-medium transition-colors ${
                   location.pathname === "/"
                     ? "text-brand-600 dark:text-brand-400"
                     : "text-stone-500 dark:text-stone-400 hover:text-stone-700 dark:hover:text-stone-200"
@@ -69,7 +69,7 @@ export default function Navbar({ onSearchOpen }: NavbarProps) {
             )}
           </div>
           {user && (
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-0.5 sm:gap-1.5">
               {/* Search button */}
               {onSearchOpen && (
                 <button

@@ -25,12 +25,12 @@ export default function ConfirmModal({
       : "bg-brand-600 hover:bg-brand-700 focus:ring-brand-500/40";
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center sm:p-4">
       <div
         className="absolute inset-0 bg-black/40 backdrop-blur-sm"
         onClick={onCancel}
       />
-      <div className="relative bg-white dark:bg-stone-900 rounded-2xl shadow-2xl w-full max-w-sm p-6 animate-in fade-in zoom-in-95">
+      <div className="relative bg-white dark:bg-stone-900 rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-sm p-5 sm:p-6 animate-in fade-in zoom-in-95">
         <div className="flex flex-col items-center text-center">
           <div className="w-14 h-14 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mb-4">
             <svg
