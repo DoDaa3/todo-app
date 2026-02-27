@@ -117,9 +117,17 @@ export default function Navbar({ onSearchOpen }: NavbarProps) {
                   onClick={() => setDropdownOpen((prev) => !prev)}
                   className="flex items-center gap-2 p-1 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
                 >
-                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center text-white text-xs font-bold">
-                    {user.name?.charAt(0)?.toUpperCase() || "U"}
-                  </div>
+                  {user.avatarUrl ? (
+                    <img
+                      src={user.avatarUrl}
+                      alt={user.name}
+                      className="w-7 h-7 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center text-white text-xs font-bold">
+                      {user.name?.charAt(0)?.toUpperCase() || "U"}
+                    </div>
+                  )}
                   <span className="hidden sm:inline text-sm text-stone-600 dark:text-stone-400 font-medium max-w-[120px] truncate">
                     {user.name}
                   </span>

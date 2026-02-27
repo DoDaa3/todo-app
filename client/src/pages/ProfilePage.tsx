@@ -32,7 +32,7 @@ function getStrengthLabel(score: number): { text: string; color: string; barColo
 }
 
 export default function ProfilePage() {
-  const { user, logout } = useAuth();
+  const { user, logout, updateUser } = useAuth();
   const { showToast } = useToast();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -42,6 +42,8 @@ export default function ProfilePage() {
   const [email, setEmail] = useState(user?.email || "");
   const [avatarPreview, setAvatarPreview] = useState<string | null>(user?.avatarUrl || null);
   const [savingProfile, setSavingProfile] = useState(false);
+  const [nameError, setNameError] = useState("");
+  const [emailError, setEmailError] = useState("");
 
   // Image crop
   const [cropModalOpen, setCropModalOpen] = useState(false);
@@ -93,33 +95,34 @@ export default function ProfilePage() {
 
   async function handleSaveProfile(e: React.FormEvent) {
     e.preventDefault();
+    setNameError("");
+    setEmailError("");
+
     if (!name.trim()) {
-      showToast("Name is required", "error");
+      setNameError("Name is required");
       return;
     }
     setSavingProfile(true);
     try {
-      await api.patch("/auth/profile", {
+      const res = await api.patch("/auth/profile", {
         name: name.trim(),
         email: email.trim(),
         avatarUrl: avatarPreview || null,
       });
 
-      // Update local storage user data
-      const stored = localStorage.getItem("user");
-      if (stored) {
-        const userData = JSON.parse(stored);
-        userData.name = name.trim();
-        userData.email = email.trim();
-        userData.avatarUrl = avatarPreview || null;
-        localStorage.setItem("user", JSON.stringify(userData));
-      }
+      // Update auth context directly (no page reload needed)
+      updateUser(res.data.user);
 
       showToast("Profile updated", "success");
-      // Refresh page to update navbar
-      window.location.reload();
     } catch (err: any) {
-      showToast(err.response?.data?.error || "Failed to update profile", "error");
+      const errorMsg = err.response?.data?.error || "Failed to update profile";
+      if (errorMsg.toLowerCase().includes("name")) {
+        setNameError(errorMsg);
+      } else if (errorMsg.toLowerCase().includes("email")) {
+        setEmailError(errorMsg);
+      } else {
+        showToast(errorMsg, "error");
+      }
     } finally {
       setSavingProfile(false);
     }
@@ -258,11 +261,19 @@ export default function ProfilePage() {
             <input
               type="text"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => { setName(e.target.value); setNameError(""); }}
               required
-              className={inputClass}
+              className={`${inputClass} ${nameError ? "!border-red-400 dark:!border-red-600 !ring-red-500/40" : ""}`}
               placeholder="Your name"
             />
+            {nameError && (
+              <p className="mt-1.5 text-xs text-red-500 dark:text-red-400 flex items-center gap-1">
+                <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                {nameError}
+              </p>
+            )}
           </div>
 
           {/* Email */}
@@ -271,12 +282,21 @@ export default function ProfilePage() {
             <input
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => { setEmail(e.target.value); setEmailError(""); }}
               required
-              className={inputClass}
+              className={`${inputClass} ${emailError ? "!border-red-400 dark:!border-red-600 !ring-red-500/40" : ""}`}
               placeholder="you@example.com"
             />
-            <p className="text-xs text-stone-400 dark:text-stone-500 mt-1">Changing your email may require re-verification.</p>
+            {emailError ? (
+              <p className="mt-1.5 text-xs text-red-500 dark:text-red-400 flex items-center gap-1">
+                <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                {emailError}
+              </p>
+            ) : (
+              <p className="text-xs text-stone-400 dark:text-stone-500 mt-1">Changing your email may require re-verification.</p>
+            )}
           </div>
 
           <div className="flex justify-end">
