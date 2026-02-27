@@ -120,6 +120,8 @@ export default function TaskDetailModal({ open, task, canEdit = true, columns = 
       setSelectedColumnId(newColumnId);
       onTaskUpdated(updatedTask);
       showToast("Status updated", "success");
+      // Close modal after status change so user sees the board update
+      onClose();
     } catch {
       showToast("Failed to change status", "error");
       setSelectedColumnId(task!.columnId);

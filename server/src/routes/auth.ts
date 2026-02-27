@@ -208,9 +208,16 @@ router.patch("/profile", authenticate, async (req: AuthRequest, res: Response) =
     }
 
     if (email !== currentUser.email) {
-      const existing = await prisma.user.findUnique({ where: { email } });
-      if (existing) {
+      const existingEmail = await prisma.user.findUnique({ where: { email } });
+      if (existingEmail) {
         return res.status(409).json({ error: "Email already in use" });
+      }
+    }
+
+    if (name.trim() !== currentUser.name) {
+      const existingName = await prisma.user.findFirst({ where: { name: name.trim(), id: { not: req.userId } } });
+      if (existingName) {
+        return res.status(409).json({ error: "Name already taken" });
       }
     }
 

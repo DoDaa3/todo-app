@@ -59,10 +59,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       // Persist to localStorage
       localStorage.setItem("darkMode", String(next));
 
-      // Persist server-side (fire-and-forget)
-      api.patch("/auth/me", { darkMode: next }).catch(() => {
-        // Silently ignore — the local preference is the source of truth
-      });
+      // Persist server-side only if logged in (fire-and-forget)
+      const token = localStorage.getItem("token");
+      if (token) {
+        api.patch("/auth/me", { darkMode: next }).catch(() => {});
+      }
 
       return next;
     });

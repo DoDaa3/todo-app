@@ -1,9 +1,35 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { useToast } from "../components/Toast";
 import Navbar from "../components/Navbar";
+import ImageCropModal from "../components/ImageCropModal";
 import api from "../lib/api";
+
+interface StrengthCheck {
+  label: string;
+  met: boolean;
+}
+
+function getPasswordStrength(password: string): { score: number; checks: StrengthCheck[] } {
+  const checks: StrengthCheck[] = [
+    { label: "8+ characters", met: password.length >= 8 },
+    { label: "Uppercase letter", met: /[A-Z]/.test(password) },
+    { label: "Lowercase letter", met: /[a-z]/.test(password) },
+    { label: "Number", met: /[0-9]/.test(password) },
+    { label: "Special character", met: /[^A-Za-z0-9]/.test(password) },
+  ];
+  const score = checks.filter((c) => c.met).length;
+  return { score, checks };
+}
+
+function getStrengthLabel(score: number): { text: string; color: string; barColor: string } {
+  if (score === 0) return { text: "", color: "", barColor: "" };
+  if (score <= 2) return { text: "Weak", color: "text-red-500", barColor: "bg-red-500" };
+  if (score <= 3) return { text: "Fair", color: "text-amber-500", barColor: "bg-amber-500" };
+  if (score <= 4) return { text: "Good", color: "text-brand-500", barColor: "bg-brand-500" };
+  return { text: "Strong", color: "text-emerald-500", barColor: "bg-emerald-500" };
+}
 
 export default function ProfilePage() {
   const { user, logout } = useAuth();
@@ -15,14 +41,22 @@ export default function ProfilePage() {
   const [name, setName] = useState(user?.name || "");
   const [email, setEmail] = useState(user?.email || "");
   const [avatarPreview, setAvatarPreview] = useState<string | null>(user?.avatarUrl || null);
-  const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [savingProfile, setSavingProfile] = useState(false);
+
+  // Image crop
+  const [cropModalOpen, setCropModalOpen] = useState(false);
+  const [rawImageSrc, setRawImageSrc] = useState<string>("");
 
   // Password change
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [savingPassword, setSavingPassword] = useState(false);
+
+  // Password strength
+  const { score, checks } = useMemo(() => getPasswordStrength(newPassword), [newPassword]);
+  const strengthInfo = useMemo(() => getStrengthLabel(score), [score]);
+  const passwordsMatch = confirmNewPassword === "" || newPassword === confirmNewPassword;
 
   // Delete account
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -31,23 +65,30 @@ export default function ProfilePage() {
 
   if (!user) return null;
 
-  function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleAvatarSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 2 * 1024 * 1024) {
       showToast("Image must be under 2MB", "error");
       return;
     }
-    setAvatarFile(file);
     const reader = new FileReader();
-    reader.onload = () => setAvatarPreview(reader.result as string);
+    reader.onload = () => {
+      setRawImageSrc(reader.result as string);
+      setCropModalOpen(true);
+    };
     reader.readAsDataURL(file);
+    // Reset so the same file can be re-selected
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
+  function handleCropDone(croppedImage: string) {
+    setAvatarPreview(croppedImage);
+    setCropModalOpen(false);
   }
 
   function removeAvatar() {
     setAvatarPreview(null);
-    setAvatarFile(null);
-    if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
   async function handleSaveProfile(e: React.FormEvent) {
@@ -58,22 +99,10 @@ export default function ProfilePage() {
     }
     setSavingProfile(true);
     try {
-      let avatarUrl = avatarPreview;
-
-      // If a new file was selected, upload it as base64
-      if (avatarFile) {
-        const reader = new FileReader();
-        const base64 = await new Promise<string>((resolve) => {
-          reader.onload = () => resolve(reader.result as string);
-          reader.readAsDataURL(avatarFile);
-        });
-        avatarUrl = base64;
-      }
-
       await api.patch("/auth/profile", {
         name: name.trim(),
         email: email.trim(),
-        avatarUrl: avatarUrl || null,
+        avatarUrl: avatarPreview || null,
       });
 
       // Update local storage user data
@@ -82,7 +111,7 @@ export default function ProfilePage() {
         const userData = JSON.parse(stored);
         userData.name = name.trim();
         userData.email = email.trim();
-        userData.avatarUrl = avatarUrl || null;
+        userData.avatarUrl = avatarPreview || null;
         localStorage.setItem("user", JSON.stringify(userData));
       }
 
@@ -102,8 +131,8 @@ export default function ProfilePage() {
       showToast("Passwords do not match", "error");
       return;
     }
-    if (newPassword.length < 8) {
-      showToast("Password must be at least 8 characters", "error");
+    if (score < 3) {
+      showToast("Please choose a stronger password", "error");
       return;
     }
     setSavingPassword(true);
@@ -218,7 +247,7 @@ export default function ProfilePage() {
               ref={fileInputRef}
               type="file"
               accept="image/jpeg,image/png,image/webp"
-              onChange={handleAvatarChange}
+              onChange={handleAvatarSelect}
               className="hidden"
             />
           </div>
@@ -286,10 +315,72 @@ export default function ProfilePage() {
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               required
-              minLength={8}
               className={inputClass}
-              placeholder="Min. 8 characters"
+              placeholder="Create a strong password"
             />
+
+            {/* Password Strength Indicator */}
+            {newPassword.length > 0 && (
+              <div className="mt-3">
+                <div className="flex gap-1.5 mb-2">
+                  {[1, 2, 3, 4, 5].map((level) => (
+                    <div
+                      key={level}
+                      className="h-1.5 flex-1 rounded-full bg-stone-200 dark:bg-stone-700 overflow-hidden"
+                    >
+                      <div
+                        className={`h-full rounded-full transition-all duration-500 ease-out ${
+                          score >= level ? strengthInfo.barColor : ""
+                        }`}
+                        style={{
+                          width: score >= level ? "100%" : "0%",
+                          transitionDelay: `${(level - 1) * 75}ms`,
+                        }}
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex items-center justify-between mb-2">
+                  <span className={`text-xs font-semibold transition-colors ${strengthInfo.color}`}>
+                    {strengthInfo.text}
+                  </span>
+                  <span className="text-[10px] text-stone-400 dark:text-stone-500">
+                    {score}/5 requirements
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-x-2 gap-y-1">
+                  {checks.map((check) => (
+                    <div
+                      key={check.label}
+                      className={`flex items-center gap-1.5 text-[11px] transition-colors duration-300 ${
+                        check.met
+                          ? "text-emerald-600 dark:text-emerald-400"
+                          : "text-stone-400 dark:text-stone-500"
+                      }`}
+                    >
+                      <div
+                        className={`w-3.5 h-3.5 rounded-full flex items-center justify-center shrink-0 transition-all duration-300 ${
+                          check.met
+                            ? "bg-emerald-100 dark:bg-emerald-900/40 scale-100"
+                            : "bg-stone-100 dark:bg-stone-800 scale-90"
+                        }`}
+                      >
+                        {check.met ? (
+                          <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                          </svg>
+                        ) : (
+                          <div className="w-1 h-1 rounded-full bg-stone-300 dark:bg-stone-600" />
+                        )}
+                      </div>
+                      {check.label}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="mb-5">
@@ -300,21 +391,24 @@ export default function ProfilePage() {
               onChange={(e) => setConfirmNewPassword(e.target.value)}
               required
               className={`${inputClass} ${
-                confirmNewPassword && newPassword !== confirmNewPassword
-                  ? "!border-red-400 dark:!border-red-600"
-                  : ""
+                !passwordsMatch ? "!border-red-400 dark:!border-red-600" : ""
               }`}
               placeholder="Re-enter new password"
             />
-            {confirmNewPassword && newPassword !== confirmNewPassword && (
-              <p className="mt-1.5 text-xs text-red-500 dark:text-red-400">Passwords do not match</p>
+            {!passwordsMatch && (
+              <p className="mt-1.5 text-xs text-red-500 dark:text-red-400 flex items-center gap-1">
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                Passwords do not match
+              </p>
             )}
           </div>
 
           <div className="flex justify-end">
             <button
               type="submit"
-              disabled={savingPassword || !currentPassword || !newPassword || newPassword !== confirmNewPassword}
+              disabled={savingPassword || !currentPassword || !newPassword || !passwordsMatch || score < 3}
               className="px-5 py-2.5 bg-gradient-to-r from-brand-600 to-brand-700 text-white text-sm font-semibold rounded-lg
                 hover:from-brand-700 hover:to-brand-800 disabled:opacity-60 disabled:cursor-not-allowed transition-all
                 shadow-md shadow-brand-600/25 hover:shadow-lg hover:shadow-brand-600/30"
@@ -375,6 +469,14 @@ export default function ProfilePage() {
           )}
         </div>
       </div>
+
+      {/* Image Crop Modal */}
+      <ImageCropModal
+        open={cropModalOpen}
+        imageSrc={rawImageSrc}
+        onClose={() => setCropModalOpen(false)}
+        onCropDone={handleCropDone}
+      />
     </div>
   );
 }
